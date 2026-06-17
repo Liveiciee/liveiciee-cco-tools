@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amadon P2P Calc</title>
+<style>
+/* ── Variables · Light ─────────────────────── */
+:root,
+[data-theme="light"]{
+  --bg:            #fbf5ea;
+  --surface:       #f5ecdc;
+  --card-bg:       #fdf8f0;
+  --border:        #ddd0bb;
+  --border-soft:   #ebe1d0;
+  --text:          #3a2c1d;
+  --muted:         #8b7355;
+  --accent:        #6b4423;
+  --accent-soft:   #b08a64;
+  --amadon-card:   #efe2cc;
+  --market-card:   #e6d4b8;
+  --bep-bg:        #f3ead8;
+  --input-bg:      #fffdf8;
+  --head-bg:       #f7eedf;
+  --btn-bg:        #fffdf8;
+  --btn-hover:     #f0e3d1;
+  --acc-bg:        #f5ede2;
+  --acc-hover:     #ecdcc6;
+  --shadow-sm:     0 1px 2px rgba(60,40,20,.05);
+  --shadow-md:     0 4px 20px rgba(60,40,20,.08);
+  --shadow-lg:     0 10px 36px rgba(60,40,20,.10);
+  --ring:          rgba(107,68,35,.35);
+  --rec-fg:        #fdf8f0;
+  --toast-fg:      #fdf8f0;
+  --rec-mk-bg:     #4a6741;
+  --rec-am-bg:     #6b4c3b;
+  --rec-tie-bg:    #5c4a3a;
+  --menu-bg:       #fffdf8;
+  --opt-hover:     #f0e3d1;
+  --opt-sel-bg:    #f5ede2;
+  --invalid-bg:    rgba(201,76,76,.06);
+  --invalid-bd:    #c94c4c;
+}
+
+/* ── Variables · Dark ──────────────────────── */
+[data-theme="dark"]{
+  --bg:            #15110c;
+  --surface:       #1d160e;
+  --card-bg:       #1f1810;
+  --border:        #3a2c1d;
+  --border-soft:   #2a2018;
+  --text:          #ece0cc;
+  --muted:         #9d8367;
+  --accent:        #d6a878;
+  --accent-soft:   #a07a55;
+  --amadon-card:   #241a10;
+  --market-card:   #20180f;
+  --bep-bg:        #1c150d;
+  --input-bg:      #16110a;
+  --head-bg:       #1c150d;
+  --btn-bg:        #1a140c;
+  --btn-hover:     #2a2018;
+  --acc-bg:        #1f1810;
+  --acc-hover:     #2a2018;
+  --shadow-sm:     0 1px 2px rgba(0,0,0,.3);
+  --shadow-md:     0 4px 20px rgba(0,0,0,.4);
+  --shadow-lg:     0 10px 36px rgba(0,0,0,.5);
+  --ring:          rgba(214,168,120,.45);
+  --rec-fg:        #fdf8f0;
+  --toast-fg:      #1a1208;
+  --rec-mk-bg:     #3f6238;
+  --rec-am-bg:     #7a5640;
+  --rec-tie-bg:    #4a3a2d;
+  --menu-bg:       #1f1810;
+  --opt-hover:     #2a2018;
+  --opt-sel-bg:    #2a2018;
+  --invalid-bg:    rgba(224,101,101,.08);
+  --invalid-bd:    #e06565;
+}
+
+/* ── Reset ──────────────────────────────────── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:'Inter',system-ui,-apple-system,'Noto Sans JP','Noto Sans KR','Noto Sans SC',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  padding:1.5rem 1rem;
+  line-height:1.5;
+  transition:background-color .3s ease,color .3s ease;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* ── Container ──────────────────────────────── */
+.wrap{
+  max-width:920px;
+  margin:0 auto;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  box-shadow:var(--shadow-lg);
+  overflow:visible;
+  transition:background-color .3s ease,border-color .3s ease,box-shadow .3s ease;
+}
+
+/* ── Header ─────────────────────────────────── */
+.hdr{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:.72rem 1.05rem;
+  background:var(--head-bg);
+  border-bottom:1px solid var(--border);
+  border-radius:14px 14px 0 0;
+  gap:.6rem;
+  transition:background-color .3s ease,border-color .3s ease;
+}
+.hdr-l{display:flex;align-items:center;gap:.6rem}
+.hdr-t{line-height:1.2}
+.hdr-title{font-size:.96rem;font-weight:700;color:var(--accent);transition:color .3s ease}
+.hdr-sub{font-size:.69rem;color:var(--muted);font-weight:500;transition:color .3s ease;margin-top:.08rem}
+.hdr-r{display:flex;align-items:center;gap:.45rem}
+
+/* ── Logo badge ─────────────────────────────── */
+.logo-badge{
+  width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--acc-bg);
+  border:1px solid var(--border);
+  border-radius:9px;
+  flex-shrink:0;
+  transition:background-color .3s ease,border-color .3s ease;
+}
+.hdr-logo{
+  stroke:var(--accent);
+  fill:none;
+  transition:stroke .3s ease;
+}
+
+/* ── Theme toggle ───────────────────────────── */
+.theme-toggle{
+  position:relative;
+  width:32px;height:32px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);border-radius:8px;
+  background:var(--btn-bg);cursor:pointer;
+  color:var(--accent);
+  transition:background .15s,border-color .15s,color .15s,transform .15s;
+}
+.theme-toggle:hover{background:var(--btn-hover);border-color:var(--accent);transform:translateY(-1px)}
+.theme-toggle:active{transform:translateY(0)}
+.theme-toggle:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.theme-toggle svg{width:16px;height:16px;stroke:currentColor;position:absolute;transition:opacity .25s ease,transform .35s cubic-bezier(.4,0,.2,1)}
+.theme-toggle .ic-sun{opacity:0;transform:rotate(-90deg) scale(.6)}
+.theme-toggle .ic-moon{opacity:1;transform:rotate(0) scale(1)}
+[data-theme="dark"] .theme-toggle .ic-sun{opacity:1;transform:rotate(0) scale(1)}
+[data-theme="dark"] .theme-toggle .ic-moon{opacity:0;transform:rotate(90deg) scale(.6)}
+
+/* ── Language dropdown ──────────────────────── */
+.lang-dd{position:relative}
+.lang-btn{
+  display:inline-flex;align-items:center;gap:.38rem;
+  font-family:inherit;font-size:.66rem;font-weight:600;
+  padding:.36rem .55rem .36rem .5rem;
+  border:1px solid var(--border);border-radius:7px;
+  background:var(--btn-bg);color:var(--text);
+  cursor:pointer;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.lang-btn:hover{background:var(--btn-hover);border-color:var(--accent)}
+.lang-btn:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.lang-flag{font-size:.78rem;line-height:1}
+.lang-code{letter-spacing:.03em}
+.lang-caret{
+  width:10px;height:10px;
+  stroke:var(--muted);
+  transition:transform .2s ease,stroke .2s;
+}
+.lang-dd.open .lang-caret{transform:rotate(180deg);stroke:var(--accent)}
+
+.lang-menu{
+  position:absolute;
+  top:calc(100% + 6px);
+  right:0;
+  min-width:188px;
+  background:var(--menu-bg);
+  border:1px solid var(--border);
+  border-radius:9px;
+  box-shadow:var(--shadow-md);
+  padding:.32rem;
+  z-index:50;
+  opacity:0;
+  transform:translateY(-4px);
+  pointer-events:none;
+  transition:opacity .15s ease,transform .15s ease;
+}
+.lang-dd.open .lang-menu{
+  opacity:1;
+  transform:translateY(0);
+  pointer-events:auto;
+}
+.lang-opt{
+  display:flex;align-items:center;gap:.5rem;
+  width:100%;
+  font-family:inherit;font-size:.7rem;font-weight:500;
+  padding:.42rem .55rem;
+  border:none;border-radius:6px;
+  background:transparent;color:var(--text);
+  cursor:pointer;text-align:left;
+  transition:background .12s,color .12s;
+}
+.lang-opt:hover{background:var(--opt-hover)}
+.lang-opt:focus-visible{outline:2px solid var(--ring);outline-offset:1px}
+.lang-opt .o-flag{font-size:.86rem;line-height:1;width:18px;text-align:center;flex-shrink:0}
+.lang-opt .o-name{flex:1}
+.lang-opt .o-check{
+  width:13px;height:13px;
+  stroke:var(--accent);
+  opacity:0;
+  transition:opacity .15s;
+  flex-shrink:0;
+}
+.lang-opt.selected .o-check{opacity:1}
+.lang-opt.selected{background:var(--opt-sel-bg);font-weight:600}
+
+/* ── Body ───────────────────────────────────── */
+.body{padding:.9rem 1.05rem 1.1rem}
+
+/* ── Top bar ────────────────────────────────── */
+.top-bar{
+  display:flex;align-items:center;flex-wrap:wrap;gap:.55rem;
+  margin-bottom:.85rem;
+}
+.ai-grp{display:flex;align-items:center;gap:.45rem}
+.ai-grp label{
+  font-size:.68rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.04em;
+  color:var(--muted);white-space:nowrap;
+  transition:color .2s;
+}
+.ai-grp input{
+  width:118px;
+  font-family:'JetBrains Mono',monospace;font-size:.83rem;
+  padding:.36rem .52rem;
+  border:1px solid var(--border);border-radius:7px;
+  background:var(--input-bg);color:var(--text);outline:none;
+  transition:border-color .15s,background-color .2s,box-shadow .15s;
+}
+.ai-grp input:hover{border-color:var(--accent-soft)}
+.ai-grp input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
+input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-bg)}
+
+.btn-grp{display:flex;gap:.42rem;margin-left:auto}
+.btn{
+  font-family:inherit;font-size:.66rem;font-weight:600;
+  padding:.4rem .66rem;
+  border:1px solid var(--border);border-radius:7px;
+  cursor:pointer;display:inline-flex;align-items:center;gap:.32rem;
+  color:var(--accent);background:var(--btn-bg);white-space:nowrap;
+  transition:background .15s,border-color .15s,color .15s,transform .12s,box-shadow .15s;
+}
+.btn:hover{background:var(--btn-hover);border-color:var(--accent);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+.btn:active{transform:translateY(0)}
+.btn:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.btn svg{width:13px;height:13px;flex-shrink:0;stroke:var(--accent);transition:stroke .15s}
+
+/* ── Cluster grid ───────────────────────────── */
+.grid{display:grid;grid-template-columns:1fr;gap:.6rem}
+@media(min-width:600px){.grid{grid-template-columns:1fr 1fr}}
+
+/* ── Cluster card ───────────────────────────── */
+.ccard{
+  border:1px solid var(--border);border-radius:10px;
+  overflow:hidden;background:var(--card-bg);
+  box-shadow:var(--shadow-sm);
+  transition:background-color .2s,border-color .2s,box-shadow .2s;
+}
+.ccard:hover{box-shadow:var(--shadow-md)}
+.chead{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:.5rem .75rem;
+  background:var(--acc-bg);
+  cursor:pointer;user-select:none;
+  border-bottom:1px solid transparent;
+  transition:background .15s,border-color .2s;
+}
+.chead:hover{background:var(--acc-hover)}
+.ccard.open .chead{border-bottom-color:var(--border)}
+.cname{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);transition:color .2s}
+.carrow{width:14px;height:14px;transition:transform .25s ease,stroke .2s;flex-shrink:0;stroke:var(--accent)}
+.ccard.open .carrow{transform:rotate(180deg)}
+.cbody-wrap{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.ccard.open .cbody-wrap{max-height:680px}
+.cbody{padding:.6rem .75rem .72rem}
+
+/* ── Input grid ─────────────────────────────── */
+.igrid{
+  display:grid;grid-template-columns:auto 1fr;
+  gap:.34rem .5rem;align-items:center;
+  margin-bottom:.42rem;
+}
+.igrid label{
+  font-size:.64rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.03em;
+  color:var(--muted);white-space:nowrap;
+  transition:color .2s;
+}
+.igrid input{
+  font-family:'JetBrains Mono',monospace;font-size:.76rem;
+  padding:.3rem .42rem;
+  border:1px solid var(--border);border-radius:6px;
+  background:var(--input-bg);color:var(--text);
+  outline:none;width:100%;transition:border-color .15s,background-color .2s,box-shadow .15s;
+}
+.igrid input:hover{border-color:var(--accent-soft)}
+.igrid input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
+
+/* ── Stock row ──────────────────────────────── */
+.srow{
+  display:flex;align-items:center;gap:.45rem;
+  margin-bottom:.42rem;flex-wrap:wrap;
+}
+.srow label{
+  font-size:.64rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.03em;color:var(--muted);transition:color .2s;
+}
+.srow input{
+  width:68px;
+  font-family:'JetBrains Mono',monospace;font-size:.74rem;
+  padding:.28rem .38rem;
+  border:1px solid var(--border);border-radius:6px;
+  background:var(--input-bg);color:var(--text);
+  outline:none;transition:border-color .15s,background-color .2s,box-shadow .15s;
+}
+.srow input:hover{border-color:var(--accent-soft)}
+.srow input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
+.stk-sum{font-size:.61rem;color:var(--muted);margin-left:auto;transition:color .2s}
+
+/* ── Result cards ───────────────────────────── */
+.rrow{display:grid;grid-template-columns:1fr 1fr;gap:.34rem;margin-bottom:.34rem}
+.rcard{
+  border:1px solid var(--border-soft);border-radius:8px;
+  padding:.42rem .5rem;text-align:center;
+  transition:background-color .2s,border-color .2s;
+}
+.rcard.amadon{background:var(--amadon-card);border-left:3px solid #c4a882}
+.rcard.market{background:var(--market-card);border-left:3px solid #a0845c}
+[data-theme="dark"] .rcard.amadon{border-left-color:#8a6c4a}
+[data-theme="dark"] .rcard.market{border-left-color:#6e5638}
+.rlbl{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-bottom:.1rem;transition:color .2s}
+.rval{font-family:'JetBrains Mono',monospace;font-size:.92rem;font-weight:700;color:var(--accent);transition:color .2s}
+.rsub{font-size:.54rem;color:var(--muted);margin-top:.06rem;transition:color .2s}
+
+/* ── BEP bar ────────────────────────────────── */
+.bep-bar{
+  background:var(--bep-bg);
+  border:1px dashed var(--border);border-radius:7px;
+  padding:.32rem .5rem;margin-bottom:.34rem;
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:.45rem;flex-wrap:wrap;
+  transition:background-color .2s,border-color .2s;
+}
+.bep-main{font-size:.62rem;font-weight:700;color:var(--muted);white-space:nowrap;transition:color .2s}
+.bep-main .bval{font-family:'JetBrains Mono',monospace;color:var(--accent);transition:color .2s}
+.bep-hint{font-size:.56rem;color:var(--muted);opacity:.75;transition:color .2s}
+
+/* ── Recommendation ─────────────────────────── */
+.rec{
+  border-radius:8px;padding:.46rem .6rem;
+  display:flex;align-items:center;gap:.45rem;
+  transition:background-color .3s ease;
+}
+.rec.r-market{background:var(--rec-mk-bg)}
+.rec.r-amadon{background:var(--rec-am-bg)}
+.rec.r-tie,
+.rec.r-fall{background:var(--rec-tie-bg)}
+.rec-icon{flex-shrink:0}
+.rec-icon svg{width:18px;height:18px;display:block}
+.rec-text{line-height:1.32;min-width:0}
+.rec-hdg{font-size:.5rem;text-transform:uppercase;letter-spacing:.05em;color:var(--rec-fg);opacity:.72}
+.rec-act{font-size:.78rem;font-weight:700;color:var(--rec-fg)}
+.rec-rsn{font-size:.58rem;color:var(--rec-fg);opacity:.88}
+
+/* ── Share bar ──────────────────────────────── */
+.share-bar{
+  display:flex;align-items:center;gap:.42rem;
+  margin-top:.85rem;
+}
+.share-input{
+  flex:1;min-width:0;
+  font-family:'JetBrains Mono',monospace;font-size:.62rem;
+  padding:.34rem .48rem;
+  border:1px solid var(--border);border-radius:7px;
+  background:var(--input-bg);color:var(--muted);
+  outline:none;cursor:text;
+  transition:border-color .15s,background-color .2s,color .15s;
+}
+.share-input:hover{border-color:var(--accent-soft)}
+.share-input:focus{border-color:var(--accent);color:var(--text)}
+
+/* ── Toast ──────────────────────────────────── */
+.toast{
+  position:fixed;bottom:1.6rem;left:50%;transform:translateX(-50%) translateY(8px);
+  background:var(--accent);color:var(--toast-fg);
+  padding:.48rem 1rem;border-radius:8px;
+  font-size:.7rem;font-weight:600;
+  z-index:99;opacity:0;
+  transition:opacity .2s,transform .2s,background-color .3s,color .3s;
+  pointer-events:none;white-space:nowrap;
+  box-shadow:var(--shadow-md);
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── Reduced motion ─────────────────────────── */
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-l">
+      <div class="logo-badge">
+        <svg class="hdr-logo" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/>
+          <path d="M16 10a4 4 0 01-8 0" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="hdr-t">
+        <div class="hdr-title" id="hTitle">Amadon P2P Calc</div>
+        <div class="hdr-sub"  id="hSub">Jual ke Amadon atau player?</div>
+      </div>
+    </div>
+    <div class="hdr-r">
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme">
+        <svg class="ic-sun" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+        </svg>
+        <svg class="ic-moon" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+        </svg>
+      </button>
+      <div class="lang-dd" id="langDd">
+        <button class="lang-btn" id="langBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Pilih bahasa">
+          <span class="lang-flag" id="langFlag">🇮🇩</span>
+          <span class="lang-code" id="langCode">ID</span>
+          <svg class="lang-caret" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="lang-menu" id="langMenu" role="listbox">
+          <button class="lang-opt" data-lang="id"     role="option" type="button"><span class="o-flag">🇮🇩</span><span class="o-name">Bahasa Indonesia</span><svg class="o-check" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+          <button class="lang-opt" data-lang="en"     role="option" type="button"><span class="o-flag">🇬🇧</span><span class="o-name">English</span><svg class="o-check" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+          <button class="lang-opt" data-lang="ja"     role="option" type="button"><span class="o-flag">🇯🇵</span><span class="o-name">日本語</span><svg class="o-check" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+          <button class="lang-opt" data-lang="ko"     role="option" type="button"><span class="o-flag">🇰🇷</span><span class="o-name">한국어</span><svg class="o-check" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+          <button class="lang-opt" data-lang="zh-CN"  role="option" type="button"><span class="o-flag">🇨🇳</span><span class="o-name">简体中文</span><svg class="o-check" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+          <button class="lang-opt" data-lang="zh-TW"  role="option" type="button"><span class="o-flag">🇹🇼</span><span class="o-name">繁體中文</span><svg class="o-check" viewBox="0 0 24 24" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="body">
+
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div class="ai-grp">
+        <label for="gAi" id="lAi">Harga Ai (BTC)</label>
+        <input type="number" id="gAi" value="9200" min="0.01" step="1">
+      </div>
+      <div class="btn-grp">
+        <button class="btn" onclick="copyRec()">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
+          <span id="btnCopy">Copy Rekomendasi</span>
+        </button>
+        <button class="btn" onclick="doReset()">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"/>
+            <path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
+          </svg>
+          <span id="btnReset">Reset</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Clusters -->
+    <div class="grid" id="grid"></div>
+
+    <!-- Share bar -->
+    <div class="share-bar">
+      <input class="share-input" id="shareUrl" readonly onclick="this.select()" placeholder="Share URL…">
+      <button class="btn" onclick="copyUrl()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
+          <polyline points="16 6 12 2 8 6"/>
+          <line x1="12" y1="2" x2="12" y2="15"/>
+        </svg>
+        <span id="btnShare">Share</span>
+      </button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Constants ────────────────────────────────
+const COST = 5000;
+
+const CL = [
+  { id:'tsc',   label:'TSC',            dA:1000000, dR:105,  dS:30, cost:5000, maxA:null,   hasStock:true  },
+  { id:'mtc',   label:'MTC',            dA:500000,  dR:52,   dS:10, cost:5000, maxA:null,   hasStock:true  },
+  { id:'atpc',  label:'ATPC',           dA:2500000, dR:260,  dS:5,  cost:5000, maxA:null,   hasStock:true  },
+  { id:'matpc', label:'MATPC',          dA:2500000, dR:260,  dS:5,  cost:5000, maxA:null,   hasStock:true  },
+  { id:'hp',    label:'Hash Processor', dA:15000,   dR:1.85, dS:0,  cost:0,    maxA:15000,  hasStock:false }
+];
+
+const LANGS = [
+  { code:'id',    flag:'🇮🇩', short:'ID'  },
+  { code:'en',    flag:'🇬🇧', short:'EN'  },
+  { code:'ja',    flag:'🇯🇵', short:'JA'  },
+  { code:'ko',    flag:'🇰🇷', short:'KO'  },
+  { code:'zh-CN', flag:'🇨🇳', short:'ZH'  },
+  { code:'zh-TW', flag:'🇹🇼', short:'TW'  }
+];
+
+// ── i18n ─────────────────────────────────────
+const STR = {
+  id:{
+    title:'Amadon P2P Calc', sub:'Jual ke Amadon atau player?',
+    ai:'Harga Ai (BTC)', amadon:'Harga Amadon', rate:'Rate P2P',
+    qty:'Jumlah', lAm:'Amadon', lMk:'Market Chat', net:'Net BTC',
+    bep:'BEP Ai', bepH:'Market lebih untung jika Ai melewati nilai ini',
+    rec:'Rekomendasi',
+    stk:'Total {0} (Am) · {1} (Mk)',
+    aAm:'Amadon', aMk:'Market Chat', aTie:'Sama Saja',
+    rMk:'+{0} BTC · Ai > BEP', rAm:'+{0} BTC · Ai < BEP', rTie:'Net sama',
+    copy:'Copy Rekomendasi', reset:'Reset', share:'Bagikan',
+    tCopy:'✅ Rekomendasi disalin!', tReset:'🔄 Kembali ke default',
+    tShare:'🔗 Link disalin!', tFail:'❌ Gagal menyalin',
+    aLang:'Pilih bahasa'
+  },
+  en:{
+    title:'Amadon P2P Calc', sub:'Sell to Amadon or players?',
+    ai:'Ai Price (BTC)', amadon:'Amadon Price', rate:'P2P Rate',
+    qty:'Qty', lAm:'Amadon', lMk:'Market Chat', net:'Net BTC',
+    bep:'BEP Ai', bepH:'Market beats Amadon when Ai exceeds this',
+    rec:'Recommendation',
+    stk:'Total {0} (Am) · {1} (Mk)',
+    aAm:'Amadon', aMk:'Market Chat', aTie:'Tie',
+    rMk:'+{0} BTC · Ai > BEP', rAm:'+{0} BTC · Ai < BEP', rTie:'Equal net',
+    copy:'Copy Rec', reset:'Reset', share:'Share',
+    tCopy:'✅ Copied!', tReset:'🔄 Reset to default',
+    tShare:'🔗 Link copied!', tFail:'❌ Copy failed',
+    aLang:'Choose language'
+  },
+  ja:{
+    title:'Amadon P2P Calc', sub:'アマドンとプレイヤー、どちらに売る？',
+    ai:'Ai価格 (BTC)', amadon:'アマドン価格', rate:'P2Pレート',
+    qty:'数量', lAm:'アマドン', lMk:'マーケット', net:'純利益 BTC',
+    bep:'BEP Ai', bepH:'Aiがこの値を超えるとMarketが有利',
+    rec:'推奨',
+    stk:'合計 {0}(アマドン) · {1}(マーケット)',
+    aAm:'アマドン', aMk:'マーケット', aTie:'同じ',
+    rMk:'+{0} BTC · Ai > BEP', rAm:'+{0} BTC · Ai < BEP', rTie:'同じ純利益',
+    copy:'推奨をコピー', reset:'リセット', share:'共有',
+    tCopy:'✅ コピー！', tReset:'🔄 リセット',
+    tShare:'🔗 リンクをコピー！', tFail:'❌ コピー失敗',
+    aLang:'言語を選択'
+  },
+  ko:{
+    title:'Amadon P2P Calc', sub:'아마돈과 플레이어, 어디에 팔까?',
+    ai:'Ai 가격 (BTC)', amadon:'아마돈 가격', rate:'P2P 비율',
+    qty:'수량', lAm:'아마돈', lMk:'마켓 채팅', net:'순이익 BTC',
+    bep:'BEP Ai', bepH:'Ai가 이 값 초과 시 Market이 유리',
+    rec:'추천',
+    stk:'총 {0}(아마돈) · {1}(마켓)',
+    aAm:'아마돈', aMk:'마켓 채팅', aTie:'동일',
+    rMk:'+{0} BTC · Ai > BEP', rAm:'+{0} BTC · Ai < BEP', rTie:'순이익 동일',
+    copy:'추천 복사', reset:'초기화', share:'공유',
+    tCopy:'✅ 복사!', tReset:'🔄 초기화',
+    tShare:'🔗 링크 복사!', tFail:'❌ 복사 실패',
+    aLang:'언어 선택'
+  },
+  'zh-CN':{
+    title:'Amadon P2P Calc', sub:'卖给 Amadon 还是玩家？',
+    ai:'Ai 价格 (BTC)', amadon:'Amadon 价格', rate:'P2P 比率',
+    qty:'数量', lAm:'Amadon 商店', lMk:'市场聊天', net:'净收益 BTC',
+    bep:'BEP Ai', bepH:'Ai超过此值时市场更划算',
+    rec:'推荐',
+    stk:'总 {0}(Amadon) · {1}(市场)',
+    aAm:'Amadon 商店', aMk:'市场聊天', aTie:'持平',
+    rMk:'+{0} BTC · Ai > BEP', rAm:'+{0} BTC · Ai < BEP', rTie:'净收益相同',
+    copy:'复制推荐', reset:'重置', share:'分享',
+    tCopy:'✅ 已复制！', tReset:'🔄 已重置',
+    tShare:'🔗 链接已复制！', tFail:'❌ 复制失败',
+    aLang:'选择语言'
+  },
+  'zh-TW':{
+    title:'Amadon P2P Calc', sub:'賣給 Amadon 還是玩家？',
+    ai:'Ai 價格 (BTC)', amadon:'Amadon 價格', rate:'P2P 比率',
+    qty:'數量', lAm:'Amadon 商店', lMk:'市場聊天', net:'淨收益 BTC',
+    bep:'BEP Ai', bepH:'Ai超過此值時市場更划算',
+    rec:'推薦',
+    stk:'總 {0}(Amadon) · {1}(市場)',
+    aAm:'Amadon 商店', aMk:'市場聊天', aTie:'持平',
+    rMk:'+{0} BTC · Ai > BEP', rAm:'+{0} BTC · Ai < BEP', rTie:'淨收益相同',
+    copy:'複製推薦', reset:'重置', share:'分享',
+    tCopy:'✅ 已複製！', tReset:'🔄 已重置',
+    tShare:'🔗 連結已複製！', tFail:'❌ 複製失敗',
+    aLang:'選擇語言'
+  }
+};
+
+let lang = 'id';
+function s(k,...a){
+  const d=STR[lang]||STR.en;
+  let v=d[k]!==undefined?d[k]:(STR.en[k]||k);
+  a.forEach((x,i)=>v=v.replace(`{${i}}`,x));
+  return v;
+}
+
+// ── Format ───────────────────────────────────
+function fmt(n){
+  if(!isFinite(n)||isNaN(n))return'∞';
+  return Math.round(n).toLocaleString('en-US');
+}
+
+// ── Toast ────────────────────────────────────
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(el._t);
+  el._t=setTimeout(()=>el.classList.remove('show'),1900);
+}
+
+// ── Validation helper ────────────────────────
+function getVal(el,decimal=true){
+  const v=decimal?parseFloat(el.value):parseInt(el.value,10);
+  const ok=isFinite(v)&&!isNaN(v)&&v>0;
+  el.classList.toggle('invalid',!ok);
+  return ok?v:null;
+}
+
+// ── URL params ───────────────────────────────
+function buildQS(){
+  const p=new URLSearchParams();
+  const ai=document.getElementById('gAi').value;
+  if(ai)p.set('ai',ai);
+  CL.forEach(c=>{
+    const a=document.getElementById(`a_${c.id}`).value;
+    const r=document.getElementById(`r_${c.id}`).value;
+    if(a)p.set(`${c.id}a`,a);
+    if(r)p.set(`${c.id}r`,r);
+    if(c.hasStock){
+      const st=document.getElementById(`s_${c.id}`).value;
+      if(st)p.set(`${c.id}s`,st);
+    }
+  });
+  if(lang!=='id')p.set('l',lang);
+  return p;
+}
+
+function syncURL(){
+  const p=buildQS();
+  try{history.replaceState(null,'',`?${p.toString()}`)}catch(_){}
+  const base=location.href.split('?')[0];
+  const url=`${base}?${p.toString()}`;
+  const el=document.getElementById('shareUrl');
+  if(el)el.value=url;
+}
+
+function loadQS(){
+  const p=new URLSearchParams(location.search);
+  if(p.has('l')&&STR[p.get('l')]){
+    lang=p.get('l');
+  }
+  if(p.has('ai'))document.getElementById('gAi').value=p.get('ai');
+  CL.forEach(c=>{
+    if(p.has(`${c.id}a`))document.getElementById(`a_${c.id}`).value=p.get(`${c.id}a`);
+    if(p.has(`${c.id}r`))document.getElementById(`r_${c.id}`).value=p.get(`${c.id}r`);
+    if(c.hasStock&&p.has(`${c.id}s`))document.getElementById(`s_${c.id}`).value=p.get(`${c.id}s`);
+  });
+}
+
+// ── Calc ─────────────────────────────────────
+const ICON_MARKET='<svg viewBox="0 0 24 24" fill="none" stroke="#fdf8f0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>';
+const ICON_AMADON='<svg viewBox="0 0 24 24" fill="none" stroke="#fdf8f0" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
+const ICON_FALL='<svg viewBox="0 0 24 24" fill="none" stroke="rgba(253,248,240,.55)" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>';
+
+function calcOne(id){
+  const cdef = CL.find(c=>c.id===id);
+  const cost = cdef ? cdef.cost : COST;
+  const ai    = getVal(document.getElementById('gAi'));
+  const amadon= getVal(document.getElementById(`a_${id}`));
+  const rate  = getVal(document.getElementById(`r_${id}`));
+  const stockEl = document.getElementById(`s_${id}`);
+  const stock = stockEl ? getVal(stockEl,false) : null;
+
+  const amNet = amadon!==null ? amadon-cost : null;
+  const mkNet = (rate!==null&&ai!==null) ? (rate*ai)-cost : null;
+  const bep   = (rate!==null&&amadon!==null&&rate>0) ? amadon/rate : null;
+
+  document.getElementById(`nAm_${id}`).textContent = amNet!==null?fmt(amNet):'—';
+  document.getElementById(`nMk_${id}`).textContent = mkNet!==null?fmt(mkNet):'—';
+  document.getElementById(`bv_${id}` ).textContent = bep !==null?fmt(bep) :'—';
+
+  if(stockEl){
+    if(amNet!==null&&mkNet!==null&&stock!==null){
+      stockEl.parentElement.querySelector(`#sum_${id}`).textContent=s('stk',fmt(amNet*stock),fmt(mkNet*stock));
+    } else {
+      stockEl.parentElement.querySelector(`#sum_${id}`).textContent='';
+    }
+  }
+
+  const recEl=document.getElementById(`rec_${id}`);
+  recEl.classList.remove('r-market','r-amadon','r-tie','r-fall');
+
+  let type,ico,act,rsn;
+  if(amNet===null||mkNet===null){
+    type='r-fall';ico=ICON_FALL;act='—';rsn='';
+  } else {
+    const diff=Math.abs(mkNet-amNet);
+    if(mkNet>amNet){
+      type='r-market';act=s('aMk');rsn=s('rMk',fmt(diff));ico=ICON_MARKET;
+    } else if(amNet>mkNet){
+      type='r-amadon';act=s('aAm');rsn=s('rAm',fmt(diff));ico=ICON_AMADON;
+    } else {
+      type='r-tie';act=s('aTie');rsn=s('rTie');ico=ICON_FALL;
+    }
+  }
+  recEl.classList.add(type);
+  document.getElementById(`rIco_${id}`).innerHTML=ico;
+  document.getElementById(`rAct_${id}`).textContent=act;
+  document.getElementById(`rRsn_${id}`).textContent=rsn;
+}
+
+function calcAll(){
+  CL.forEach(c=>calcOne(c.id));
+  syncURL();
+}
+
+// ── Render clusters ───────────────────────────
+const cardOpen={}; // first render defaults to open; subsequent renders preserve state
+function renderClusters(){
+  const saved={};
+  CL.forEach(c=>{
+    const ae=document.getElementById(`a_${c.id}`);
+    const ce=document.getElementById(`cc_${c.id}`);
+    if(ae){
+      const se=document.getElementById(`s_${c.id}`);
+      saved[c.id]={
+        a:ae.value,
+        r:document.getElementById(`r_${c.id}`).value,
+        s: se?se.value:'',
+        // preserve accordion state; default open on first render
+        open: ce?ce.classList.contains('open'):(cardOpen[c.id]!==undefined?cardOpen[c.id]:true)
+      };
+      cardOpen[c.id]=saved[c.id].open;
+    }
+  });
+
+  const grid=document.getElementById('grid');
+  grid.innerHTML='';
+
+  CL.forEach(c=>{
+    const v=saved[c.id]||{a:c.dA,r:c.dR,s:c.dS,open:cardOpen[c.id]!==undefined?cardOpen[c.id]:true};
+    cardOpen[c.id]=v.open;
+    const el=document.createElement('div');
+    el.className='ccard'+(v.open?' open':'');
+    el.id=`cc_${c.id}`;
+    const maxAttr = c.maxA!=null ? ` max="${c.maxA}"` : '';
+    const stockRow = c.hasStock ? `
+          <div class="srow">
+            <label>${s('qty')}</label>
+            <input type="number" id="s_${c.id}" value="${v.s}" min="1" step="1">
+            <span class="stk-sum" id="sum_${c.id}"></span>
+          </div>` : '';
+    el.innerHTML=`
+      <div class="chead" onclick="toggleCard('${c.id}')">
+        <span class="cname">⬤ ${c.label}</span>
+        <svg class="carrow" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="cbody-wrap">
+        <div class="cbody">
+          <div class="igrid">
+            <label>${s('amadon')}</label>
+            <input type="number" id="a_${c.id}" value="${v.a}" min="1" step="1"${maxAttr}>
+            <label>${s('rate')} (Ai/${c.label})</label>
+            <input type="number" id="r_${c.id}" value="${v.r}" min="0.01" step="0.1">
+          </div>${stockRow}
+          <div class="rrow">
+            <div class="rcard amadon">
+              <div class="rlbl">${s('lAm')}</div>
+              <div class="rval" id="nAm_${c.id}">—</div>
+              <div class="rsub">${s('net')}</div>
+            </div>
+            <div class="rcard market">
+              <div class="rlbl">${s('lMk')}</div>
+              <div class="rval" id="nMk_${c.id}">—</div>
+              <div class="rsub">${s('net')}</div>
+            </div>
+          </div>
+          <div class="bep-bar">
+            <span class="bep-main">${s('bep')} = <span class="bval" id="bv_${c.id}">—</span> BTC</span>
+            <span class="bep-hint" id="bH_${c.id}">${s('bepH')}</span>
+          </div>
+          <div class="rec" id="rec_${c.id}">
+            <div class="rec-icon" id="rIco_${c.id}"></div>
+            <div class="rec-text">
+              <div class="rec-hdg" id="rHdg_${c.id}">${s('rec')}</div>
+              <div class="rec-act" id="rAct_${c.id}"></div>
+              <div class="rec-rsn" id="rRsn_${c.id}"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    grid.appendChild(el);
+
+    ['a','r'].forEach(f=>{
+      document.getElementById(`${f}_${c.id}`).addEventListener('input',calcAll);
+    });
+    if(c.hasStock){
+      document.getElementById(`s_${c.id}`).addEventListener('input',calcAll);
+    }
+  });
+}
+
+function toggleCard(id){
+  const el=document.getElementById(`cc_${id}`);
+  const isOpen=el.classList.toggle('open');
+  cardOpen[id]=isOpen;
+}
+
+// ── Static text ──────────────────────────────
+function updateStatic(){
+  document.getElementById('hTitle').textContent  =s('title');
+  document.getElementById('hSub').textContent    =s('sub');
+  document.getElementById('lAi').textContent     =s('ai');
+  document.getElementById('btnCopy').textContent =s('copy');
+  document.getElementById('btnReset').textContent=s('reset');
+  document.getElementById('btnShare').textContent=s('share');
+  document.getElementById('langBtn').setAttribute('aria-label',s('aLang'));
+}
+
+// ── Copy utils ───────────────────────────────
+function doCopy(text,ok){
+  if(navigator.clipboard&&window.isSecureContext){
+    navigator.clipboard.writeText(text).then(()=>toast(ok)).catch(()=>fbCopy(text,ok));
+  } else {
+    fbCopy(text,ok);
+  }
+}
+function fbCopy(text,ok){
+  const ta=document.createElement('textarea');
+  ta.value=text;ta.style.cssText='position:fixed;left:-9999px;top:-9999px';
+  document.body.appendChild(ta);ta.focus();ta.select();
+  try{document.execCommand('copy');toast(ok)}
+  catch{toast(s('tFail'))}
+  document.body.removeChild(ta);
+}
+
+function copyRec(){
+  const lines=[`Ai: ${document.getElementById('gAi').value} BTC`];
+  CL.forEach(c=>{
+    const act=document.getElementById(`rAct_${c.id}`).textContent;
+    const rsn=document.getElementById(`rRsn_${c.id}`).textContent;
+    lines.push(`${c.label}: ${act}${rsn?' — '+rsn:''}`);
+  });
+  doCopy(lines.join('\n'),s('tCopy'));
+}
+
+function copyUrl(){
+  doCopy(document.getElementById('shareUrl').value,s('tShare'));
+}
+
+function doReset(){
+  document.getElementById('gAi').value=9200;
+  document.getElementById('gAi').classList.remove('invalid');
+  CL.forEach(c=>{
+    document.getElementById(`a_${c.id}`).value=c.dA;
+    document.getElementById(`r_${c.id}`).value=c.dR;
+    const sEl=document.getElementById(`s_${c.id}`);
+    if(sEl)sEl.value=c.dS;
+    ['a','r','s'].forEach(f=>{
+      const el=document.getElementById(`${f}_${c.id}`);
+      if(el)el.classList.remove('invalid');
+    });
+  });
+  calcAll();
+  toast(s('tReset'));
+}
+
+// ── Theme ────────────────────────────────────
+const THEME_KEY='amadon-theme';
+function getInitialTheme(){
+  const saved=localStorage.getItem(THEME_KEY);
+  if(saved==='light'||saved==='dark')return saved;
+  return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+}
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  localStorage.setItem(THEME_KEY,t);
+  const btn=document.getElementById('themeToggle');
+  if(btn)btn.setAttribute('aria-label',t==='dark'?'Switch to light theme':'Switch to dark theme');
+}
+
+// ── Language dropdown ────────────────────────
+function setLangUI(code){
+  const def=LANGS.find(l=>l.code===code)||LANGS[0];
+  document.getElementById('langFlag').textContent=def.flag;
+  document.getElementById('langCode').textContent=def.short;
+  document.querySelectorAll('.lang-opt').forEach(o=>{
+    o.classList.toggle('selected',o.dataset.lang===code);
+  });
+}
+
+function openLangMenu(){
+  document.getElementById('langDd').classList.add('open');
+  document.getElementById('langBtn').setAttribute('aria-expanded','true');
+}
+function closeLangMenu(){
+  document.getElementById('langDd').classList.remove('open');
+  document.getElementById('langBtn').setAttribute('aria-expanded','false');
+}
+
+function changeLang(code){
+  if(!STR[code])return;
+  lang=code;
+  setLangUI(code);
+  renderClusters();
+  updateStatic();
+  calcAll();
+}
+
+// ── Init ──────────────────────────────────────
+applyTheme(getInitialTheme());
+loadQS();              // set lang + inputs from URL first
+setLangUI(lang);       // sync dropdown button display
+renderClusters();      // now renders with correct lang
+updateStatic();
+calcAll();
+
+document.getElementById('themeToggle').addEventListener('click',()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  applyTheme(cur==='dark'?'light':'dark');
+});
+
+document.getElementById('langBtn').addEventListener('click',e=>{
+  e.stopPropagation();
+  const dd=document.getElementById('langDd');
+  dd.classList.contains('open')?closeLangMenu():openLangMenu();
+});
+document.querySelectorAll('.lang-opt').forEach(o=>{
+  o.addEventListener('click',()=>{
+    changeLang(o.dataset.lang);
+    closeLangMenu();
+  });
+});
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#langDd'))closeLangMenu();
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeLangMenu();
+});
+
+document.getElementById('gAi').addEventListener('input',calcAll);
+</script>
+</body>
+</html>
