@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="light">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -467,7 +467,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
       </div>
       <div class="hdr-t">
         <div class="hdr-title" id="hTitle">Amadon P2P Calc</div>
-        <div class="hdr-sub"  id="hSub">Jual ke Amadon atau player?</div>
+        <div class="hdr-sub"  id="hSub">Sell to Amadon or players?</div>
       </div>
     </div>
     <div class="hdr-r">
@@ -481,9 +481,9 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
         </svg>
       </button>
       <div class="lang-dd" id="langDd">
-        <button class="lang-btn" id="langBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Pilih bahasa">
-          <span class="lang-flag" id="langFlag">🇮🇩</span>
-          <span class="lang-code" id="langCode">ID</span>
+        <button class="lang-btn" id="langBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Choose language">
+          <span class="lang-flag" id="langFlag">🇬🇧</span>
+          <span class="lang-code" id="langCode">EN</span>
           <svg class="lang-caret" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"/>
           </svg>
@@ -506,12 +506,12 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
     <!-- Top bar -->
     <div class="top-bar">
       <div class="ai-grp">
-        <label for="gAi" id="lAi">Harga Ai (BTC)</label>
-        <input type="number" id="gAi" value="9200" min="0.01" step="1">
+        <label for="gAi" id="lAi">Ai Price (BTC)</label>
+        <input type="number" id="gAi" value="9000" min="0.01" step="1">
       </div>
       <div class="craft-grp">
-        <label class="craft-label" id="lCraft" for="craftToggle">Biaya Crafting</label>
-        <button class="craft-toggle on" id="craftToggle" type="button" role="switch" aria-checked="true" aria-label="Biaya Crafting">
+        <label class="craft-label" id="lCraft" for="craftToggle">Crafting Cost</label>
+        <button class="craft-toggle" id="craftToggle" type="button" role="switch" aria-checked="false" aria-label="Crafting Cost">
           <span class="knob"></span>
         </button>
       </div>
@@ -521,7 +521,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
             <rect x="9" y="9" width="13" height="13" rx="2"/>
             <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
           </svg>
-          <span id="btnCopy">Copy Rekomendasi</span>
+          <span id="btnCopy">Copy Rec</span>
         </button>
         <button class="btn" onclick="doReset()">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -557,10 +557,10 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 const COST = 5000;
 
 const CL = [
-  { id:'tsc',   label:'TSC',            dA:1000000, dR:105,  dS:30, cost:5000, maxA:null,   hasStock:true  },
-  { id:'mtc',   label:'MTC',            dA:500000,  dR:52,   dS:10, cost:5000, maxA:null,   hasStock:true  },
-  { id:'atpc',  label:'ATPC',           dA:2500000, dR:260,  dS:5,  cost:5000, maxA:null,   hasStock:true  },
-  { id:'matpc', label:'MATPC',          dA:2500000, dR:260,  dS:5,  cost:5000, maxA:null,   hasStock:true  },
+  { id:'tsc',   label:'TSC',            dA:1000000, dR:105,  dS:10, cost:5000, maxA:null,   hasStock:true  },
+  { id:'mtc',   label:'MTC',            dA:500000,  dR:50,   dS:10, cost:5000, maxA:null,   hasStock:true  },
+  { id:'atpc',  label:'ATPC',           dA:1059000, dR:105,  dS:10, cost:5000, maxA:null,   hasStock:true  },
+  { id:'matpc', label:'MATPC',          dA:1040000, dR:105,  dS:10, cost:5000, maxA:null,   hasStock:true  },
   { id:'hp',    label:'Hash Processor', dA:15000,   dR:1.85, dS:0,  cost:0,    maxA:15000,  hasStock:false }
 ];
 
@@ -673,7 +673,7 @@ const STR = {
   }
 };
 
-let lang = 'id';
+let lang = 'en';
 function s(k,...a){
   const d=STR[lang]||STR.en;
   let v=d[k]!==undefined?d[k]:(STR.en[k]||k);
@@ -752,7 +752,7 @@ const ICON_AMADON='<svg viewBox="0 0 24 24" fill="none" stroke="#fdf8f0" stroke-
 const ICON_FALL='<svg viewBox="0 0 24 24" fill="none" stroke="rgba(253,248,240,.55)" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>';
 
 // Global toggle: whether to apply per-cluster crafting cost
-let useCost = true;
+let useCost = false;
 const COST_KEY='amadon-use-cost';
 function applyUseCost(on){
   useCost = on;
@@ -1025,7 +1025,7 @@ function copyUrl(){
 }
 
 function doReset(){
-  document.getElementById('gAi').value=9200;
+  document.getElementById('gAi').value=9000;
   document.getElementById('gAi').classList.remove('invalid');
   CL.forEach(c=>{
     document.getElementById(`a_${c.id}`).value=c.dA;
