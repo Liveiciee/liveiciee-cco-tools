@@ -590,6 +590,16 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .rec.r-tie,
 .rec.r-fall{background:var(--rec-tie-bg)}
 .rec-icon{flex-shrink:0}
+.rec-copy{
+  flex-shrink:0;
+  background:transparent;border:none;cursor:pointer;
+  color:var(--rec-fg);opacity:.5;
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:.18rem;border-radius:5px;
+  transition:opacity .15s,background .15s;
+}
+.rec-copy svg{width:14px;height:14px;stroke:currentColor}
+.rec-copy:hover{opacity:1;background:rgba(255,255,255,.15)}
 .rec-icon svg{width:18px;height:18px;display:block}
 .rec-text{line-height:1.32;min-width:0}
 .rec-hdg{font-size:.5rem;text-transform:uppercase;letter-spacing:.05em;color:var(--rec-fg);opacity:.72}
@@ -994,7 +1004,7 @@ const STR = {
     stk:'Total {0} (Am) · {1} (Mk)',
     aAm:'Amadon', aMk:'Market Chat', aTie:'Sama Saja',
     rMk:'+{0} BTC · Ai > BEP', rAm:'+{0} BTC · Ai < BEP', rTie:'Net sama',
-    copy:'Copy Rekomendasi', reset:'Reset', share:'Bagikan',
+    copy:'Copy', copyAll:'Copy Semua', reset:'Reset', share:'Bagikan',
     tCopy:'✅ Rekomendasi disalin!', tReset:'🔄 Kembali ke default',
     tShare:'🔗 Link disalin!', tFail:'❌ Gagal menyalin',
     tUndo:'↩️ Undo reset?', tUndoBtn:'Undo',
@@ -1027,7 +1037,7 @@ const STR = {
     stk:'Total {0} (Am) · {1} (Mk)',
     aAm:'Amadon', aMk:'Market Chat', aTie:'Tie',
     rMk:'+{0} BTC · Ai > BEP', rAm:'+{0} BTC · Ai < BEP', rTie:'Equal net',
-    copy:'Copy Rec', reset:'Reset', share:'Share',
+    copy:'Copy', copyAll:'Copy All', reset:'Reset', share:'Share',
     tCopy:'✅ Copied!', tReset:'🔄 Reset to default',
     tShare:'🔗 Link copied!', tFail:'❌ Copy failed',
     tUndo:'↩️ Undo reset?', tUndoBtn:'Undo',
@@ -1060,7 +1070,7 @@ const STR = {
     stk:'合計 {0}(アマドン) · {1}(マーケット)',
     aAm:'アマドン', aMk:'マーケット', aTie:'同じ',
     rMk:'+{0} BTC · Ai > BEP', rAm:'+{0} BTC · Ai < BEP', rTie:'同じ純利益',
-    copy:'推奨をコピー', reset:'リセット', share:'共有',
+    copy:'コピー', copyAll:'すべてコピー', reset:'リセット', share:'共有',
     tCopy:'✅ コピー！', tReset:'🔄 リセット',
     tShare:'🔗 リンクをコピー！', tFail:'❌ コピー失敗',
     tUndo:'↩️ リセットを元に戻す？', tUndoBtn:'元に戻す',
@@ -1093,7 +1103,7 @@ const STR = {
     stk:'총 {0}(아마돈) · {1}(마켓)',
     aAm:'아마돈', aMk:'마켓 채팅', aTie:'동일',
     rMk:'+{0} BTC · Ai > BEP', rAm:'+{0} BTC · Ai < BEP', rTie:'순이익 동일',
-    copy:'추천 복사', reset:'초기화', share:'공유',
+    copy:'복사', copyAll:'모두 복사', reset:'초기화', share:'공유',
     tCopy:'✅ 복사!', tReset:'🔄 초기화',
     tShare:'🔗 링크 복사!', tFail:'❌ 복사 실패',
     tUndo:'↩️ 초기화 실행 취소?', tUndoBtn:'실행 취소',
@@ -1126,7 +1136,7 @@ const STR = {
     stk:'总 {0}(Amadon) · {1}(市场)',
     aAm:'Amadon 商店', aMk:'市场聊天', aTie:'持平',
     rMk:'+{0} BTC · Ai > BEP', rAm:'+{0} BTC · Ai < BEP', rTie:'净收益相同',
-    copy:'复制推荐', reset:'重置', share:'分享',
+    copy:'复制', copyAll:'全部复制', reset:'重置', share:'分享',
     tCopy:'✅ 已复制！', tReset:'🔄 已重置',
     tShare:'🔗 链接已复制！', tFail:'❌ 复制失败',
     tUndo:'↩️ 撤销重置？', tUndoBtn:'撤销',
@@ -1159,7 +1169,7 @@ const STR = {
     stk:'總 {0}(Amadon) · {1}(市場)',
     aAm:'Amadon 商店', aMk:'市場聊天', aTie:'持平',
     rMk:'+{0} BTC · Ai > BEP', rAm:'+{0} BTC · Ai < BEP', rTie:'淨收益相同',
-    copy:'複製推薦', reset:'重置', share:'分享',
+    copy:'複製', copyAll:'全部複製', reset:'重置', share:'分享',
     tCopy:'✅ 已複製！', tReset:'🔄 已重置',
     tShare:'🔗 連結已複製！', tFail:'❌ 複製失敗',
     tUndo:'↩️ 復原重置？', tUndoBtn:'復原',
@@ -1540,6 +1550,9 @@ function renderClusters(){
               <div class="rec-act" id="rAct_${c.id}"></div>
               <div class="rec-rsn" id="rRsn_${c.id}"></div>
             </div>
+            <button class="rec-copy" data-action="copy-item" data-id="${c.id}" aria-label="${s('copy')}" title="${s('copy')}">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+            </button>
           </div>
         </div>
       </div>
@@ -1694,7 +1707,7 @@ function updateStatic(){
   document.getElementById('hSub').textContent    =s('sub');
   document.getElementById('lAi').textContent     =s('ai');
   document.getElementById('lCraft').textContent  =s('craft');
-  document.getElementById('btnCopy').textContent =s('copy');
+  document.getElementById('btnCopy').textContent =s('copyAll');
   document.getElementById('btnReset').textContent=s('reset');
   document.getElementById('btnShare').textContent=s('share');
   const btnText = document.getElementById('btnEditText');
@@ -1833,79 +1846,130 @@ function fbCopy(text,ok){
   document.body.removeChild(ta);
 }
 
-function copyRec(){
-  const out=[];
+function formatCompact(n){
+  const abs = Math.abs(n);
+  const strip = s => s.includes('.') ? s.replace(/\.?0+$/,'') : s;
+  if(abs >= 1e6){
+    const v = n / 1e6;
+    return strip(v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2)) + 'M';
+  }
+  if(abs >= 1e3){
+    const v = n / 1e3;
+    return strip(v >= 100 ? v.toFixed(0) : v >= 10 ? v.toFixed(1) : v.toFixed(2)) + 'k';
+  }
+  return String(Math.round(n));
+}
+
+function copyItemRec(id){
+  const cdef = CL_MAP.get(id);
+  if(!cdef) return;
+  const recEl = document.getElementById(`rec_${id}`);
+  const state = recEl ? recEl.dataset.rec : 'fall';
   const aiVal = parseFloat(document.getElementById('gAi').value) || 0;
-  const LINE = '─'.repeat(38);
-
-  // Header
-  out.push(LINE);
-  out.push(`${s('title')} — ${s('rec')}`);
-  out.push(`${s('ai')}: ${fmt(aiVal)} BTC`);
-  out.push(LINE);
-  out.push('');
-
-  let totalPotential = 0;
-  let hasValid = false;
 
   const parseNum = t => {
     const n = parseInt((t||'').replace(/[^\d-]/g,''),10);
     return isNaN(n) ? 0 : n;
   };
 
-  CL.forEach(c=>{
+  const amN = parseNum(document.getElementById(`nAm_${id}`).textContent);
+  const mkN = parseNum(document.getElementById(`nMk_${id}`).textContent);
+
+  const stockEl = document.getElementById(`s_${id}`);
+  const qty = stockEl ? parseInt(stockEl.value,10) || 0 : 1;
+  const rateEl = document.getElementById(`r_${id}`);
+  const rate = rateEl ? parseFloat(rateEl.value) || 0 : 0;
+
+  // Totals: per-unit net × qty
+  const amTotal = amN * (cdef.hasStock ? qty : 1);
+  const mkTotal = mkN * (cdef.hasStock ? qty : 1);
+
+  // Build single-line format
+  let line = `Ai: ${Math.round(aiVal)} btc, ${cdef.label}`;
+  if(cdef.hasStock && qty > 0){
+    const rq = rate * qty;
+    line += ` ${qty}:${Number.isInteger(rq) ? rq : parseFloat(rq.toFixed(2))}`;
+  }
+  line += ` → Amadon: ${formatCompact(amTotal)} vs Market: ${formatCompact(mkTotal)}`;
+
+  if(state === 'fall'){
+    line += ` ⚠️ ${s('cpIncomplete')}`;
+  } else if(state === 'tie'){
+    line += ` = ${s('aTie')}`;
+  } else {
+    const winner = state === 'market' ? s('aMk') : s('aAm');
+    const diff = Math.abs(mkTotal - amTotal);
+    line += ` ✅ ${winner} (+${formatCompact(diff)})`;
+  }
+
+  doCopy(line, s('tCopy'));
+}
+
+function copyRec(){
+  const aiVal = parseFloat(document.getElementById('gAi').value) || 0;
+  const LINE = '─'.repeat(29);
+  const out = [];
+
+  // Header
+  out.push(`📊 ${s('title').toUpperCase()}`);
+  out.push(`${s('ai')}: ${fmt(aiVal)} BTC`);
+  out.push(LINE);
+
+  const parseNum = t => {
+    const n = parseInt((t||'').replace(/[^\d-]/g,''),10);
+    return isNaN(n) ? 0 : n;
+  };
+
+  let totalPotential = 0;
+  let hasValid = false;
+
+  CL.forEach(c => {
     const recEl = document.getElementById(`rec_${c.id}`);
     const state = recEl ? recEl.dataset.rec : 'fall';
-    const act   = (document.getElementById(`rAct_${c.id}`).textContent||'').trim();
-    const amTxt = (document.getElementById(`nAm_${c.id}`).textContent||'').trim();
-    const mkTxt = (document.getElementById(`nMk_${c.id}`).textContent||'').trim();
-    const bepTxt= (document.getElementById(`bv_${c.id}`).textContent||'').trim();
+    const amN = parseNum(document.getElementById(`nAm_${c.id}`).textContent);
+    const mkN = parseNum(document.getElementById(`nMk_${c.id}`).textContent);
 
-    const amN = parseNum(amTxt);
-    const mkN = parseNum(mkTxt);
+    const stockEl = document.getElementById(`s_${c.id}`);
+    const qty = stockEl ? parseInt(stockEl.value,10) || 0 : 1;
+    const rateEl = document.getElementById(`r_${c.id}`);
+    const rate = rateEl ? parseFloat(rateEl.value) || 0 : 0;
 
-    out.push(`▸ ${c.label}`);
-    out.push(`  ${s('rec')}: ${act}`);
+    const amTotal = amN * (c.hasStock ? qty : 1);
+    const mkTotal = mkN * (c.hasStock ? qty : 1);
+
+    out.push(`📦 ${c.label}`);
 
     if(state === 'fall'){
-      out.push(`  ${s('cpIncomplete')}`);
-    } else if(state === 'tie'){
-      out.push(`  ${s('rTie')} · ${s('bep')} ${bepTxt} BTC`);
-      if(c.hasStock){
-        const stock = parseInt(document.getElementById(`s_${c.id}`).value,10) || 0;
-        const total = amN * stock;
-        out.push(`  ${s('qty')}: ${stock} · ${s('cpTotal')}: ${fmt(total)} BTC`);
-        totalPotential += total;
-      } else {
-        totalPotential += amN;
-      }
-      hasValid = true;
+      out.push(`├─ ⚠️ ${s('cpIncomplete')}`);
+      out.push(`└─`);
     } else {
-      // state === 'market' or 'amadon'
-      out.push(`  ${s('lAm')}: ${amTxt} BTC`);
-      out.push(`  ${s('lMk')}: ${mkTxt} BTC`);
-      const diff = Math.abs(mkN - amN);
-      const cmp = mkN > amN ? '>' : '<';
-      out.push(`  ${s('cpDiff')}: +${fmt(diff)} BTC · Ai ${cmp} BEP (${bepTxt} BTC)`);
-      if(c.hasStock){
-        const stock = parseInt(document.getElementById(`s_${c.id}`).value,10) || 0;
-        const best = (state === 'market') ? mkN : amN;
-        const total = best * stock;
-        out.push(`  ${s('qty')}: ${stock} · ${s('cpTotal')}: ${fmt(total)} BTC`);
-        totalPotential += total;
+      // Line 1: qty:rate → Amadon vs Market (totals, compact)
+      let line1 = '├─ ';
+      if(c.hasStock && qty > 0){
+        const rq = rate * qty;
+        line1 += `${qty}:${Number.isInteger(rq) ? rq : parseFloat(rq.toFixed(2))} → `;
+      }
+      line1 += `Amadon: ${formatCompact(amTotal)} vs Market: ${formatCompact(mkTotal)}`;
+      out.push(line1);
+
+      // Line 2: winner + diff
+      if(state === 'tie'){
+        out.push(`└─ = ${s('aTie')}`);
+        totalPotential += amTotal;
       } else {
-        totalPotential += (state === 'market') ? mkN : amN;
+        const winner = state === 'market' ? s('aMk') : s('aAm');
+        const diff = Math.abs(mkTotal - amTotal);
+        out.push(`└─ ✅ ${winner} (+${formatCompact(diff)})`);
+        totalPotential += (state === 'market') ? mkTotal : amTotal;
       }
       hasValid = true;
     }
-    out.push('');
   });
 
-  // Grand total
+  // Footer
   if(hasValid){
     out.push(LINE);
-    out.push(`${s('cpTotal')}: ${fmt(totalPotential)} BTC`);
-    out.push(LINE);
+    out.push(`💰 ${s('cpTotal')}: ${formatCompact(totalPotential)} BTC`);
   }
 
   doCopy(out.join('\n'), s('tCopy'));
@@ -2151,6 +2215,7 @@ function bindEvents(){
     switch(action){
       case 'toggle-card':  toggleCard(target.dataset.id); break;
       case 'copy-rec':     copyRec(); break;
+      case 'copy-item':    copyItemRec(target.dataset.id); break;
       case 'copy-url':     copyUrl(); break;
       case 'do-reset':     doReset(); break;
       case 'select-self':  target.select(); break;
