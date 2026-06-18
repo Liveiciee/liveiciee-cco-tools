@@ -682,9 +682,6 @@ function syncURL(){
 
 function loadQS(){
   const p=new URLSearchParams(location.search);
-  if(p.has('l')&&STR[p.get('l')]){
-    lang=p.get('l');
-  }
   if(p.has('ai'))document.getElementById('gAi').value=p.get('ai');
   CL.forEach(c=>{
     if(p.has(`${c.id}a`))document.getElementById(`a_${c.id}`).value=p.get(`${c.id}a`);
@@ -946,9 +943,14 @@ function changeLang(code){
 
 // ── Init ──────────────────────────────────────
 applyTheme(getInitialTheme());
-loadQS();              // set lang + inputs from URL first
-setLangUI(lang);       // sync dropdown button display
-renderClusters();      // now renders with correct lang
+// Pre-parse URL for language BEFORE first render so labels match URL
+{
+  const p=new URLSearchParams(location.search);
+  if(p.has('l')&&STR[p.get('l')])lang=p.get('l');
+}
+setLangUI(lang);
+renderClusters();      // cluster inputs now exist in DOM
+loadQS();              // safe to populate inputs from URL
 updateStatic();
 calcAll();
 
