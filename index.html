@@ -95,7 +95,14 @@ body{
   transition:background-color .3s ease,color .3s ease;
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
+  -webkit-tap-highlight-color:transparent;
 }
+/* Kill default blue focus ring on mouse click; keep theme-aware ring for keyboard via :focus-visible */
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+/* Add subtle active feedback on interactive elements (no blue tap flash) */
+button:active,[role="switch"]:active,.btn:active,.lang-btn:active,.lang-opt:active,
+.theme-toggle:active,.craft-toggle:active,.chead:active{transform:translateY(1px)}
 
 /* ── Container ──────────────────────────────── */
 .wrap{
@@ -534,14 +541,14 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
         </button>
       </div>
       <div class="btn-grp">
-        <button class="btn" onclick="copyRec()">
+        <button class="btn" data-action="copy-rec">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <rect x="9" y="9" width="13" height="13" rx="2"/>
             <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
           </svg>
           <span id="btnCopy">Copy Rec</span>
         </button>
-        <button class="btn" onclick="doReset()">
+        <button class="btn" data-action="do-reset">
           <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="1 4 1 10 7 10"/>
             <path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
@@ -556,8 +563,8 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 
     <!-- Share bar -->
     <div class="share-bar">
-      <input class="share-input" id="shareUrl" readonly onclick="this.select()" placeholder="Share URL…">
-      <button class="btn" onclick="copyUrl()">
+      <input class="share-input" id="shareUrl" readonly data-action="select-self" placeholder="Share URL…">
+      <button class="btn" data-action="copy-url">
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
           <polyline points="16 6 12 2 8 6"/>
@@ -581,6 +588,13 @@ const CL = [
   { id:'matpc', label:'MATPC',          dA:1040000, dR:105,  dS:10, cost:5000, maxA:null,   hasStock:true  },
   { id:'hp',    label:'Hash Processor', dA:15000,   dR:1.85, dS:0,  cost:0,    maxA:15000,  hasStock:false }
 ];
+
+const CL_MAP = new Map(CL.map(c => [c.id, c]));
+
+const KEYS = {
+  theme:   'amadon-theme',
+  useCost: 'amadon-use-cost'
+};
 
 const LANGS = [
   { code:'id',    flag:'🇮🇩', short:'ID'  },
@@ -771,10 +785,9 @@ const ICON_FALL='<svg viewBox="0 0 24 24" fill="none" stroke="rgba(253,248,240,.
 
 // Global toggle: whether to apply per-cluster crafting cost
 let useCost = false;
-const COST_KEY='amadon-use-cost';
 function applyUseCost(on){
   useCost = on;
-  try{localStorage.setItem(COST_KEY, on?'1':'0')}catch(_){}
+  try{localStorage.setItem(KEYS.useCost, on?'1':'0')}catch(_){}
   const btn=document.getElementById('craftToggle');
   if(btn){
     btn.classList.toggle('on',on);
@@ -784,7 +797,7 @@ function applyUseCost(on){
 }
 
 function calcOne(id){
-  const cdef = CL.find(c=>c.id===id);
+  const cdef = CL_MAP.get(id);
   const baseCost = cdef ? cdef.cost : COST;
   const cost = useCost ? baseCost : 0;
   const ai    = getVal(document.getElementById('gAi'));
@@ -812,20 +825,21 @@ function calcOne(id){
   const recEl=document.getElementById(`rec_${id}`);
   recEl.classList.remove('r-market','r-amadon','r-tie','r-fall');
 
-  let type,ico,act,rsn;
+  let type,ico,act,rsn,state;
   if(amNet===null||mkNet===null){
-    type='r-fall';ico=ICON_FALL;act='—';rsn='';
+    state='fall';type='r-fall';ico=ICON_FALL;act='—';rsn='';
   } else {
     const diff=Math.abs(mkNet-amNet);
     if(mkNet>amNet){
-      type='r-market';act=s('aMk');rsn=s('rMk',fmt(diff));ico=ICON_MARKET;
+      state='market';type='r-market';act=s('aMk');rsn=s('rMk',fmt(diff));ico=ICON_MARKET;
     } else if(amNet>mkNet){
-      type='r-amadon';act=s('aAm');rsn=s('rAm',fmt(diff));ico=ICON_AMADON;
+      state='amadon';type='r-amadon';act=s('aAm');rsn=s('rAm',fmt(diff));ico=ICON_AMADON;
     } else {
-      type='r-tie';act=s('aTie');rsn=s('rTie');ico=ICON_FALL;
+      state='tie';type='r-tie';act=s('aTie');rsn=s('rTie');ico=ICON_FALL;
     }
   }
   recEl.classList.add(type);
+  recEl.dataset.rec=state;
   document.getElementById(`rIco_${id}`).innerHTML=ico;
   document.getElementById(`rAct_${id}`).textContent=act;
   document.getElementById(`rRsn_${id}`).textContent=rsn;
@@ -837,35 +851,39 @@ function calcAll(){
 }
 
 // ── Render clusters ───────────────────────────
-const cardOpen={}; // first render defaults to open; subsequent renders preserve state
+// cardOpen{} is the single source of truth for accordion state.
+// Defaults: only TSC open on first render.
+const cardOpen = {};
+function defaultOpen(id){ return id === 'tsc'; }
+
 function renderClusters(){
-  const saved={};
-  CL.forEach(c=>{
-    const ae=document.getElementById(`a_${c.id}`);
-    const ce=document.getElementById(`cc_${c.id}`);
-    if(ae){
-      const se=document.getElementById(`s_${c.id}`);
-      saved[c.id]={
-        a:ae.value,
-        r:document.getElementById(`r_${c.id}`).value,
-        s: se?se.value:'',
-        // preserve accordion state; default: only TSC open on first render
-        open: ce?ce.classList.contains('open'):(cardOpen[c.id]!==undefined?cardOpen[c.id]:(c.id==='tsc'))
-      };
-      cardOpen[c.id]=saved[c.id].open;
-    }
+  // Snapshot current input values before wiping the grid
+  const saved = {};
+  CL.forEach(c => {
+    const ae = document.getElementById(`a_${c.id}`);
+    if(!ae) return;  // first render: no DOM yet
+    const se = document.getElementById(`s_${c.id}`);
+    saved[c.id] = {
+      a: ae.value,
+      r: document.getElementById(`r_${c.id}`).value,
+      s: se ? se.value : ''
+    };
   });
 
-  const grid=document.getElementById('grid');
-  grid.innerHTML='';
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
 
-  CL.forEach(c=>{
-    const v=saved[c.id]||{a:c.dA,r:c.dR,s:c.dS,open:cardOpen[c.id]!==undefined?cardOpen[c.id]:(c.id==='tsc')};
-    cardOpen[c.id]=v.open;
-    const cardType = c.id==='hp' ? 'is-hash' : 'is-cluster';
-    const el=document.createElement('div');
-    el.className='ccard '+cardType+(v.open?' open':'');
-    el.id=`cc_${c.id}`;
+  CL.forEach(c => {
+    // Initialize cardOpen if first render
+    if(cardOpen[c.id] === undefined) cardOpen[c.id] = defaultOpen(c.id);
+
+    const v = saved[c.id] || { a:c.dA, r:c.dR, s:c.dS };
+    const isOpen = cardOpen[c.id];
+    const cardType = c.id === 'hp' ? 'is-hash' : 'is-cluster';
+    const el = document.createElement('div');
+    el.className = 'ccard ' + cardType + (isOpen ? ' open' : '');
+    el.id = `cc_${c.id}`;
+    el.dataset.cid = c.id;  // for event delegation
     const maxAttr = c.maxA!=null ? ` max="${c.maxA}"` : '';
     const stockRow = c.hasStock ? `
           <div class="srow">
@@ -874,7 +892,7 @@ function renderClusters(){
             <span class="stk-sum" id="sum_${c.id}"></span>
           </div>` : '';
     el.innerHTML=`
-      <div class="chead" onclick="toggleCard('${c.id}')">
+      <div class="chead" data-action="toggle-card" data-id="${c.id}">
         <span class="cname">
           <svg class="chex" viewBox="0 0 24 24" aria-hidden="true">
             <polygon points="12,3 20,8 20,16 12,21 4,16 4,8" transform="rotate(30 12 12)"/>
@@ -931,9 +949,10 @@ function renderClusters(){
 }
 
 function toggleCard(id){
-  const el=document.getElementById(`cc_${id}`);
-  const isOpen=el.classList.toggle('open');
-  cardOpen[id]=isOpen;
+  const isOpen = !cardOpen[id];
+  cardOpen[id] = isOpen;
+  const el = document.getElementById(`cc_${id}`);
+  if(el) el.classList.toggle('open', isOpen);
 }
 
 // ── Static text ──────────────────────────────
@@ -988,11 +1007,12 @@ function copyRec(){
   };
 
   CL.forEach(c=>{
-    const act = (document.getElementById(`rAct_${c.id}`).textContent||'').trim();
-    const rsn = (document.getElementById(`rRsn_${c.id}`).textContent||'').trim();
+    const recEl = document.getElementById(`rec_${c.id}`);
+    const state = recEl ? recEl.dataset.rec : 'fall';
+    const act   = (document.getElementById(`rAct_${c.id}`).textContent||'').trim();
     const amTxt = (document.getElementById(`nAm_${c.id}`).textContent||'').trim();
     const mkTxt = (document.getElementById(`nMk_${c.id}`).textContent||'').trim();
-    const bepTxt = (document.getElementById(`bv_${c.id}`).textContent||'').trim();
+    const bepTxt= (document.getElementById(`bv_${c.id}`).textContent||'').trim();
 
     const amN = parseNum(amTxt);
     const mkN = parseNum(mkTxt);
@@ -1000,10 +1020,9 @@ function copyRec(){
     out.push(`▸ ${c.label}`);
     out.push(`  ${s('rec')}: ${act}`);
 
-    if(act === '—' || act === ''){
+    if(state === 'fall'){
       out.push(`  ${s('cpIncomplete')}`);
-    } else if(rsn === s('rTie')){
-      // Tie
+    } else if(state === 'tie'){
       out.push(`  ${s('rTie')} · ${s('bep')} ${bepTxt} BTC`);
       if(c.hasStock){
         const stock = parseInt(document.getElementById(`s_${c.id}`).value,10) || 0;
@@ -1015,7 +1034,7 @@ function copyRec(){
       }
       hasValid = true;
     } else {
-      // Market or Amadon wins
+      // state === 'market' or 'amadon'
       out.push(`  ${s('lAm')}: ${amTxt} BTC`);
       out.push(`  ${s('lMk')}: ${mkTxt} BTC`);
       const diff = Math.abs(mkN - amN);
@@ -1023,12 +1042,12 @@ function copyRec(){
       out.push(`  ${s('cpDiff')}: +${fmt(diff)} BTC · Ai ${cmp} BEP (${bepTxt} BTC)`);
       if(c.hasStock){
         const stock = parseInt(document.getElementById(`s_${c.id}`).value,10) || 0;
-        const best = (act === s('aMk')) ? mkN : amN;
+        const best = (state === 'market') ? mkN : amN;
         const total = best * stock;
         out.push(`  ${s('qty')}: ${stock} · ${s('cpTotal')}: ${fmt(total)} BTC`);
         totalPotential += total;
       } else {
-        totalPotential += (act === s('aMk')) ? mkN : amN;
+        totalPotential += (state === 'market') ? mkN : amN;
       }
       hasValid = true;
     }
@@ -1067,7 +1086,7 @@ function doReset(){
 }
 
 // ── Theme ────────────────────────────────────
-const THEME_KEY='amadon-theme';
+const THEME_KEY = KEYS.theme;
 function getInitialTheme(){
   const saved=localStorage.getItem(THEME_KEY);
   if(saved==='light'||saved==='dark')return saved;
@@ -1109,53 +1128,88 @@ function changeLang(code){
 }
 
 // ── Init ──────────────────────────────────────
-applyTheme(getInitialTheme());
-// Pre-parse URL for language BEFORE first render so labels match URL
-{
-  const p=new URLSearchParams(location.search);
-  if(p.has('l')&&STR[p.get('l')])lang=p.get('l');
+
+// Step 1: read persistent state from localStorage
+function initStateFromStorage(){
+  // theme
+  applyTheme(getInitialTheme());
+  // craft-cost toggle (loadQS may override via URL)
+  const savedCost = localStorage.getItem(KEYS.useCost);
+  if(savedCost === '0' || savedCost === '1') useCost = savedCost !== '0';
 }
-// Restore craft-cost toggle from localStorage first (loadQS may override via URL)
-{
-  const saved=localStorage.getItem(COST_KEY);
-  if(saved==='0'||saved==='1')useCost = saved!=='0';
+
+// Step 2: read state from URL (overrides storage)
+function initStateFromURL(){
+  const p = new URLSearchParams(location.search);
+  if(p.has('l') && STR[p.get('l')]) lang = p.get('l');
 }
-setLangUI(lang);
-applyUseCost(useCost);   // sync toggle visual + aria
-renderClusters();      // cluster inputs now exist in DOM
-loadQS();              // safe to populate inputs from URL (may override useCost)
-updateStatic();
-calcAll();
 
-document.getElementById('themeToggle').addEventListener('click',()=>{
-  const cur=document.documentElement.getAttribute('data-theme');
-  applyTheme(cur==='dark'?'light':'dark');
-});
-
-document.getElementById('craftToggle').addEventListener('click',()=>{
-  applyUseCost(!useCost);
-  calcAll();
-});
-
-document.getElementById('langBtn').addEventListener('click',e=>{
-  e.stopPropagation();
-  const dd=document.getElementById('langDd');
-  dd.classList.contains('open')?closeLangMenu():openLangMenu();
-});
-document.querySelectorAll('.lang-opt').forEach(o=>{
-  o.addEventListener('click',()=>{
-    changeLang(o.dataset.lang);
-    closeLangMenu();
+// Step 3: wire event listeners
+function bindEvents(){
+  // Theme toggle
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    applyTheme(cur === 'dark' ? 'light' : 'dark');
   });
-});
-document.addEventListener('click',e=>{
-  if(!e.target.closest('#langDd'))closeLangMenu();
-});
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape')closeLangMenu();
-});
 
-document.getElementById('gAi').addEventListener('input',calcAll);
+  // Craft-cost toggle
+  document.getElementById('craftToggle').addEventListener('click', () => {
+    applyUseCost(!useCost);
+    calcAll();
+  });
+
+  // Ai price input
+  document.getElementById('gAi').addEventListener('input', calcAll);
+
+  // Language dropdown
+  document.getElementById('langBtn').addEventListener('click', e => {
+    e.stopPropagation();
+    const dd = document.getElementById('langDd');
+    dd.classList.contains('open') ? closeLangMenu() : openLangMenu();
+  });
+  document.querySelectorAll('.lang-opt').forEach(o => {
+    o.addEventListener('click', () => {
+      changeLang(o.dataset.lang);
+      closeLangMenu();
+    });
+  });
+  document.addEventListener('click', e => {
+    if(!e.target.closest('#langDd')) closeLangMenu();
+  });
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape') closeLangMenu();
+  });
+
+  // Event delegation for data-action elements (replaces inline onclick)
+  document.addEventListener('click', e => {
+    const target = e.target.closest('[data-action]');
+    if(!target) return;
+    const action = target.dataset.action;
+    switch(action){
+      case 'toggle-card': toggleCard(target.dataset.id); break;
+      case 'copy-rec':    copyRec(); break;
+      case 'copy-url':    copyUrl(); break;
+      case 'do-reset':    doReset(); break;
+      case 'select-self': target.select(); break;
+    }
+  });
+}
+
+// Step 4: render initial UI
+function initUI(){
+  setLangUI(lang);
+  applyUseCost(useCost);   // sync toggle visual + aria
+  renderClusters();        // cluster inputs now exist in DOM
+  loadQS();                // populate inputs from URL (may override useCost)
+  updateStatic();
+  calcAll();
+}
+
+// Boot
+initStateFromStorage();
+initStateFromURL();
+initUI();
+bindEvents();
 </script>
 </body>
 </html>
