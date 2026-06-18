@@ -32,6 +32,8 @@
   --ring:          rgba(107,68,35,.35);
   --rec-fg:        #fdf8f0;
   --toast-fg:      #fdf8f0;
+  --cluster-accent:#a8842c;
+  --hash-accent:   #3a2c1d;
   --rec-mk-bg:     #4a6741;
   --rec-am-bg:     #6b4c3b;
   --rec-tie-bg:    #5c4a3a;
@@ -68,6 +70,8 @@
   --ring:          rgba(214,168,120,.45);
   --rec-fg:        #fdf8f0;
   --toast-fg:      #1a1208;
+  --cluster-accent:#d4b76a;
+  --hash-accent:   #ece0cc;
   --rec-mk-bg:     #3f6238;
   --rec-am-bg:     #7a5640;
   --rec-tie-bg:    #4a3a2d;
@@ -321,8 +325,22 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 }
 .chead:hover{background:var(--acc-hover)}
 .ccard.open .chead{border-bottom-color:var(--border)}
-.cname{font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--accent);transition:color .2s}
-.carrow{width:14px;height:14px;transition:transform .25s ease,stroke .2s;flex-shrink:0;stroke:var(--accent)}
+.ccard.is-cluster{--card-accent:var(--cluster-accent)}
+.ccard.is-hash{--card-accent:var(--hash-accent)}
+.cname{
+  font-size:.66rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--card-accent,var(--accent));
+  transition:color .2s;
+  display:inline-flex;align-items:center;gap:.42rem;
+}
+.chex{
+  width:18px;height:18px;flex-shrink:0;
+  transition:fill .2s;
+}
+.chex polygon{fill:var(--card-accent,var(--accent));transition:fill .2s}
+.chex circle{fill:var(--acc-bg);transition:fill .15s}
+.chead:hover .chex circle{fill:var(--acc-hover)}
+.carrow{width:14px;height:14px;transition:transform .25s ease,stroke .2s;flex-shrink:0;stroke:var(--card-accent,var(--accent))}
 .ccard.open .carrow{transform:rotate(180deg)}
 .cbody-wrap{max-height:0;overflow:hidden;transition:max-height .3s ease}
 .ccard.open .cbody-wrap{max-height:680px}
@@ -831,8 +849,8 @@ function renderClusters(){
         a:ae.value,
         r:document.getElementById(`r_${c.id}`).value,
         s: se?se.value:'',
-        // preserve accordion state; default open on first render
-        open: ce?ce.classList.contains('open'):(cardOpen[c.id]!==undefined?cardOpen[c.id]:true)
+        // preserve accordion state; default: only TSC open on first render
+        open: ce?ce.classList.contains('open'):(cardOpen[c.id]!==undefined?cardOpen[c.id]:(c.id==='tsc'))
       };
       cardOpen[c.id]=saved[c.id].open;
     }
@@ -842,10 +860,11 @@ function renderClusters(){
   grid.innerHTML='';
 
   CL.forEach(c=>{
-    const v=saved[c.id]||{a:c.dA,r:c.dR,s:c.dS,open:cardOpen[c.id]!==undefined?cardOpen[c.id]:true};
+    const v=saved[c.id]||{a:c.dA,r:c.dR,s:c.dS,open:cardOpen[c.id]!==undefined?cardOpen[c.id]:(c.id==='tsc')};
     cardOpen[c.id]=v.open;
+    const cardType = c.id==='hp' ? 'is-hash' : 'is-cluster';
     const el=document.createElement('div');
-    el.className='ccard'+(v.open?' open':'');
+    el.className='ccard '+cardType+(v.open?' open':'');
     el.id=`cc_${c.id}`;
     const maxAttr = c.maxA!=null ? ` max="${c.maxA}"` : '';
     const stockRow = c.hasStock ? `
@@ -856,8 +875,14 @@ function renderClusters(){
           </div>` : '';
     el.innerHTML=`
       <div class="chead" onclick="toggleCard('${c.id}')">
-        <span class="cname">⬤ ${c.label}</span>
-        <svg class="carrow" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        <span class="cname">
+          <svg class="chex" viewBox="0 0 24 24" aria-hidden="true">
+            <polygon points="12,3 20,8 20,16 12,21 4,16 4,8" transform="rotate(30 12 12)"/>
+            <circle cx="12" cy="12" r="3.5"/>
+          </svg>
+          ${c.label}
+        </span>
+        <svg class="carrow" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
       </div>
       <div class="cbody-wrap">
         <div class="cbody">
