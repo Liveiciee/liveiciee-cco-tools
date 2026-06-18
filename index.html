@@ -30,13 +30,10 @@
   --shadow-md:     0 4px 20px rgba(20,25,35,.08);
   --shadow-lg:     0 10px 36px rgba(20,25,35,.10);
   --ring:          rgba(58,63,71,.35);
-  --rec-fg:        #ffffff;
   --toast-fg:      #ffffff;
   --cluster-accent:#6b7280;
   --hash-accent:   #1f2329;
-  --rec-mk-bg:     #2e7d32;
   --rec-am-bg:     #455a64;
-  --rec-tie-bg:    #4b5563;
   --menu-bg:       #ffffff;
   --opt-hover:     #e3e6ea;
   --opt-sel-bg:    #eceef1;
@@ -68,18 +65,22 @@
   --shadow-md:     0 4px 20px rgba(0,0,0,.4);
   --shadow-lg:     0 10px 36px rgba(0,0,0,.5);
   --ring:          rgba(197,205,216,.45);
-  --rec-fg:        #ffffff;
   --toast-fg:      #0f1115;
   --cluster-accent:#c5cdd8;
   --hash-accent:   #e4e7eb;
-  --rec-mk-bg:     #2e7d32;
   --rec-am-bg:     #546e7a;
-  --rec-tie-bg:    #4b5563;
   --menu-bg:       #1c1f26;
   --opt-hover:     #2a2f38;
   --opt-sel-bg:    #2a2f38;
   --invalid-bg:    rgba(248,113,113,.08);
   --invalid-bd:    #f87171;
+}
+
+/* Shared vars — same value in both themes */
+:root{
+  --rec-fg:        #ffffff;
+  --rec-mk-bg:     #2e7d32;
+  --rec-tie-bg:    #4b5563;
 }
 
 /* ── Reset ──────────────────────────────────── */
@@ -638,17 +639,15 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 }
 .tip-wrap:hover .tip-icon{
   background:var(--accent);
-  color:var(--rec-fg);
+  color:var(--card-bg);
   border-color:var(--accent);
 }
 .tip-bubble{
-  position:absolute;
-  top:calc(100% + 6px);
-  left:50%;
-  transform:translateX(-50%) translateY(-4px);
+  position:fixed;
+  top:0;left:0;
   min-width:160px;max-width:min(220px,calc(100vw - 24px));
   background:var(--accent);
-  color:var(--rec-fg);
+  color:var(--card-bg);
   padding:.5rem .68rem;
   border-radius:7px;
   font-size:.62rem;font-weight:500;
@@ -660,28 +659,30 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   z-index:60;
   opacity:0;
   pointer-events:none;
-  transition:opacity .15s,transform .15s;
+  transition:opacity .15s;
 }
 .tip-bubble::after{
   content:'';
   position:absolute;
-  bottom:100%;left:var(--arrow-x,50%);
+  left:var(--arrow-x,50%);
   transform:translateX(-50%);
   border:5px solid transparent;
+}
+.tip-bubble.arrow-top::after{
+  top:-10px;
   border-bottom-color:var(--accent);
 }
-.tip-wrap:hover .tip-bubble{
-  opacity:1;
-  transform:translateX(-50%) translateY(0);
+.tip-bubble.arrow-bottom::after{
+  bottom:-10px;
+  border-top-color:var(--accent);
 }
-/* Touch devices: show on tap via .show-tip class */
+.tip-wrap:hover .tip-bubble,
 .tip-wrap.show-tip .tip-bubble{
   opacity:1;
-  transform:translateX(-50%) translateY(0);
 }
 .tip-wrap.show-tip .tip-icon{
   background:var(--accent);
-  color:var(--rec-fg);
+  color:var(--card-bg);
   border-color:var(--accent);
 }
 
@@ -822,7 +823,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
           <p id="tutP1">1. Enter Ai Price (BTC) — current Ai price in server/market.</p>
           <p id="tutP2">2. Each item has 3 inputs:</p>
           <p>• <span id="tutAmadon">Amadon Price — sell price to Amadon. Check the Amadon menu in-game.</span></p>
-          <p>• <span id="tutRate">P2P Rate — Ai-to-item ratio (e.g. 1 Ai = 105 TSC). Ask other players / check market chat.</span></p>
+          <p>• <span id="tutRate">P2P Rate — Ai-to-item ratio (e.g. 1 TSC = 105 Ai). Ask other players / check market chat.</span></p>
           <p>• <span id="tutQty">Qty — how many items you have / want to sell.</span></p>
           <p id="tutP3">3. Result: Net BTC = (Amadon or Rate×Ai) − Crafting Cost. Green = Amadon wins, blue = Market wins.</p>
           <p id="tutP4">4. BEP Ai = the Ai price at which Market beats Amadon. If current Ai < BEP → sell to Amadon.</p>
@@ -979,17 +980,17 @@ const STR = {
     edit:'Edit', done:'Selesai',
     addItem:'+ Tambah Item', deleteItem:'Hapus', itemLabel:'Nama', newItem:'Item Baru',
     colorLabel:'Warna',
-    tutTitle:'Cara Pakai', tutClose:'Tutup', tutShow:'? Cara Pakai',
+    tutTitle:'Cara Pakai', tutClose:'Tutup',
     tutP1:'1. Masukkan Harga Ai (BTC) — harga Ai saat ini di server/market.',
     tutP2:'2. Tiap item punya 3 input:',
     tutAmadon:'Amadon Price — harga jual item ke Amadon. Cek di menu Amadon di game.',
-    tutRate:'P2P Rate — rasio Ai per item (contoh: 1 Ai = 105 TSC). Tanya pemain lain / cek chat market.',
+    tutRate:'P2P Rate — rasio Ai per item (contoh: 1 TSC = 105 Ai). Tanya pemain lain / cek chat market.',
     tutQty:'Qty — jumlah item yang kamu punya / mau jual.',
     tutP3:'3. Hasil: Net BTC = (Amadon atau Rate×Ai) − Crafting Cost. Hijau = Amadon menang, biru = Market menang.',
     tutP4:'4. BEP Ai = harga Ai saat Market mulai lebih untung dari Amadon. Kalau Ai sekarang < BEP → jual ke Amadon.',
     tipAi:'Harga Ai saat ini di server/market (BTC).',
     tipAmadon:'Harga jual item ke Amadon. Cek di menu Amadon di game.',
-    tipRate:'Rasio Ai per item. Contoh: 105 artinya 1 Ai = 105 item ini. Tanya pemain / cek chat market.',
+    tipRate:'Rasio Ai per item. Contoh: 105 artinya 1 item ini = 105 Ai. Tanya pemain / cek chat market.',
     tipQty:'Jumlah item yang kamu punya / mau jual.',
     tipCost:'Biaya crafting item (otomatis dipotong dari net). Set 0 kalau gak ada biaya.'
   },
@@ -1011,17 +1012,17 @@ const STR = {
     edit:'Edit', done:'Done',
     addItem:'+ Add Item', deleteItem:'Delete', itemLabel:'Name', newItem:'New Item',
     colorLabel:'Color',
-    tutTitle:'How to Use', tutClose:'Close', tutShow:'? How to Use',
+    tutTitle:'How to Use', tutClose:'Close',
     tutP1:'1. Enter Ai Price (BTC) — current Ai price in server/market.',
     tutP2:'2. Each item has 3 inputs:',
     tutAmadon:'Amadon Price — sell price to Amadon. Check the Amadon menu in-game.',
-    tutRate:'P2P Rate — Ai-to-item ratio (e.g. 1 Ai = 105 TSC). Ask other players / check market chat.',
+    tutRate:'P2P Rate — Ai-to-item ratio (e.g. 1 TSC = 105 Ai). Ask other players / check market chat.',
     tutQty:'Qty — how many items you have / want to sell.',
     tutP3:'3. Result: Net BTC = (Amadon or Rate×Ai) − Crafting Cost. Green = Amadon wins, blue = Market wins.',
     tutP4:'4. BEP Ai = the Ai price at which Market beats Amadon. If current Ai < BEP → sell to Amadon.',
     tipAi:'Current Ai price in server/market (BTC).',
     tipAmadon:'Sell price to Amadon. Check the Amadon menu in-game.',
-    tipRate:'Ai-to-item ratio. E.g. 105 means 1 Ai = 105 of this item. Ask players / check market chat.',
+    tipRate:'Ai-to-item ratio. E.g. 105 means 1 of this item = 105 Ai. Ask players / check market chat.',
     tipQty:'How many items you have / want to sell.',
     tipCost:'Crafting cost of the item (auto-subtracted from net). Set 0 if no cost.'
   },
@@ -1043,17 +1044,17 @@ const STR = {
     edit:'編集', done:'完了',
     addItem:'+ アイテム追加', deleteItem:'削除', itemLabel:'名前', newItem:'新規アイテム',
     colorLabel:'色',
-    tutTitle:'使い方', tutClose:'閉じる', tutShow:'? 使い方',
+    tutTitle:'使い方', tutClose:'閉じる',
     tutP1:'1. Ai価格 (BTC) を入力 — サーバー/市場の現在のAi価格。',
     tutP2:'2. 各アイテムには3つの入力項目があります：',
     tutAmadon:'アマドン価格 — アマドンへの売却価格。ゲーム内のアマドンメニューで確認。',
-    tutRate:'P2Pレート — Ai対アイテムの比率 (例: 1 Ai = 105 TSC)。他のプレイヤーに聞く / マーケットチャットを確認。',
+    tutRate:'P2Pレート — Ai対アイテムの比率 (例: 1 TSC = 105 Ai)。他のプレイヤーに聞く / マーケットチャットを確認。',
     tutQty:'数量 — 持っている / 売りたいアイテムの数。',
     tutP3:'3. 結果：純利益 BTC = (アマドン または レート×Ai) − クラフト費用。緑 = アマドン勝ち、青 = マーケット勝ち。',
     tutP4:'4. BEP Ai = マーケットがアマドンより有利になるAi価格。現在のAi < BEP → アマドンに売る。',
     tipAi:'サーバー/市場の現在のAi価格 (BTC)。',
     tipAmadon:'アマドンへの売却価格。ゲーム内のアマドンメニューで確認。',
-    tipRate:'Ai対アイテムの比率。例：105 = 1 Ai = 105個。プレイヤーに聞く / マーケットチャット確認。',
+    tipRate:'Ai対アイテムの比率。例：105 = 1個 = 105 Ai。プレイヤーに聞く / マーケットチャット確認。',
     tipQty:'持っている / 売りたいアイテムの数。',
     tipCost:'アイテムのクラフト費用 (純利益から自動差し引き)。費用なしなら0。'
   },
@@ -1075,17 +1076,17 @@ const STR = {
     edit:'편집', done:'완료',
     addItem:'+ 아이템 추가', deleteItem:'삭제', itemLabel:'이름', newItem:'새 아이템',
     colorLabel:'색상',
-    tutTitle:'사용 방법', tutClose:'닫기', tutShow:'? 사용 방법',
+    tutTitle:'사용 방법', tutClose:'닫기',
     tutP1:'1. Ai 가격 (BTC) 입력 — 서버/시장의 현재 Ai 가격.',
     tutP2:'2. 각 아이템에는 3개의 입력란이 있습니다:',
     tutAmadon:'아마돈 가격 — 아마돈에게 판매하는 가격. 게임 내 아마돈 메뉴에서 확인.',
-    tutRate:'P2P 비율 — Ai 대 아이템 비율 (예: 1 Ai = 105 TSC). 다른 플레이어에게 물어보기 / 마켓 채팅 확인.',
+    tutRate:'P2P 비율 — Ai 대 아이템 비율 (예: 1 TSC = 105 Ai). 다른 플레이어에게 물어보기 / 마켓 채팅 확인.',
     tutQty:'수량 — 가지고 있는 / 팔고 싶은 아이템 수.',
     tutP3:'3. 결과: 순이익 BTC = (아마돈 또는 비율×Ai) − 크래프팅 비용. 초록 = 아마돈 승, 파랑 = 마켓 승.',
     tutP4:'4. BEP Ai = 마켓이 아마돈보다 유리해지는 Ai 가격. 현재 Ai < BEP → 아마돈에 판매.',
     tipAi:'서버/시장의 현재 Ai 가격 (BTC).',
     tipAmadon:'아마돈에게 판매하는 가격. 게임 내 아마돈 메뉴에서 확인.',
-    tipRate:'Ai 대 아이템 비율. 예: 105 = 1 Ai = 105개. 플레이어에게 물어보기 / 마켓 채팅 확인.',
+    tipRate:'Ai 대 아이템 비율. 예: 105 = 1개 = 105 Ai. 플레이어에게 물어보기 / 마켓 채팅 확인.',
     tipQty:'가지고 있는 / 팔고 싶은 아이템 수.',
     tipCost:'아이템의 크래프팅 비용 (순이익에서 자동 차감). 비용 없으면 0.'
   },
@@ -1107,17 +1108,17 @@ const STR = {
     edit:'编辑', done:'完成',
     addItem:'+ 添加物品', deleteItem:'删除', itemLabel:'名称', newItem:'新物品',
     colorLabel:'颜色',
-    tutTitle:'使用说明', tutClose:'关闭', tutShow:'? 使用说明',
+    tutTitle:'使用说明', tutClose:'关闭',
     tutP1:'1. 输入 Ai 价格 (BTC) — 服务器/市场当前 Ai 价格。',
     tutP2:'2. 每个物品有 3 个输入：',
     tutAmadon:'Amadon 价格 — 卖给 Amadon 的价格。在游戏内 Amadon 菜单查看。',
-    tutRate:'P2P 比率 — Ai 与物品的比率 (如 1 Ai = 105 TSC)。问其他玩家 / 看市场聊天。',
+    tutRate:'P2P 比率 — Ai 与物品的比率 (如 1 TSC = 105 Ai)。问其他玩家 / 看市场聊天。',
     tutQty:'数量 — 你拥有 / 想卖的物品数量。',
     tutP3:'3. 结果：净收益 BTC = (Amadon 或 比率×Ai) − 制作费用。绿色 = Amadon 赢，蓝色 = 市场赢。',
     tutP4:'4. BEP Ai = 市场开始比 Amadon 更划算的 Ai 价格。如果当前 Ai < BEP → 卖给 Amadon。',
     tipAi:'服务器/市场当前 Ai 价格 (BTC)。',
     tipAmadon:'卖给 Amadon 的价格。在游戏内 Amadon 菜单查看。',
-    tipRate:'Ai 与物品的比率。如 105 = 1 Ai = 105 个此物品。问玩家 / 看市场聊天。',
+    tipRate:'Ai 与物品的比率。如 105 = 1 个此物品 = 105 Ai。问玩家 / 看市场聊天。',
     tipQty:'你拥有 / 想卖的物品数量。',
     tipCost:'物品的制作费用 (从净收益自动扣除)。无费用设为 0。'
   },
@@ -1139,17 +1140,17 @@ const STR = {
     edit:'編輯', done:'完成',
     addItem:'+ 新增物品', deleteItem:'刪除', itemLabel:'名稱', newItem:'新物品',
     colorLabel:'顏色',
-    tutTitle:'使用說明', tutClose:'關閉', tutShow:'? 使用說明',
+    tutTitle:'使用說明', tutClose:'關閉',
     tutP1:'1. 輸入 Ai 價格 (BTC) — 伺服器/市場當前 Ai 價格。',
     tutP2:'2. 每個物品有 3 個輸入：',
     tutAmadon:'Amadon 價格 — 賣給 Amadon 的價格。在遊戲內 Amadon 選單查看。',
-    tutRate:'P2P 比率 — Ai 與物品的比率 (如 1 Ai = 105 TSC)。問其他玩家 / 看市場聊天。',
+    tutRate:'P2P 比率 — Ai 與物品的比率 (如 1 TSC = 105 Ai)。問其他玩家 / 看市場聊天。',
     tutQty:'數量 — 你擁有 / 想賣的物品數量。',
     tutP3:'3. 結果：淨收益 BTC = (Amadon 或 比率×Ai) − 製作費用。綠色 = Amadon 贏，藍色 = 市場贏。',
     tutP4:'4. BEP Ai = 市場開始比 Amadon 更划算的 Ai 價格。如果當前 Ai < BEP → 賣給 Amadon。',
     tipAi:'伺服器/市場當前 Ai 價格 (BTC)。',
     tipAmadon:'賣給 Amadon 的價格。在遊戲內 Amadon 選單查看。',
-    tipRate:'Ai 與物品的比率。如 105 = 1 Ai = 105 個此物品。問玩家 / 看市場聊天。',
+    tipRate:'Ai 與物品的比率。如 105 = 1 個此物品 = 105 Ai。問玩家 / 看市場聊天。',
     tipQty:'你擁有 / 想賣的物品數量。',
     tipCost:'物品的製作費用 (從淨收益自動扣除)。無費用設為 0。'
   }
@@ -1479,7 +1480,7 @@ function renderClusters(){
           <div class="igrid">
             <label>${s('amadon')}<span class="tip-wrap" data-tip="amadon"><span class="tip-icon">?</span><span class="tip-bubble">${s('tipAmadon')}</span></span></label>
             <input type="number" id="a_${c.id}" value="${v.a}" min="1" step="1"${maxAttr}>
-            <label>${s('rate')} (Ai/${escapeHtml(c.label)})<span class="tip-wrap" data-tip="rate"><span class="tip-icon">?</span><span class="tip-bubble">${s('tipRate')}</span></span></label>
+            <label>${s('rate')} (Ai)<span class="tip-wrap" data-tip="rate"><span class="tip-icon">?</span><span class="tip-bubble">${s('tipRate')}</span></span></label>
             <input type="number" id="r_${c.id}" value="${v.r}" min="0.01" step="0.1">
           </div>${editFields}${stockRow}
           <div class="rrow">
@@ -1667,6 +1668,8 @@ function updateStatic(){
   document.getElementById('langBtn').setAttribute('aria-label',s('aLang'));
   const ct=document.getElementById('craftToggle');
   if(ct)ct.setAttribute('aria-label',s('craft'));
+  const bh=document.getElementById('btnHelp');
+  if(bh){bh.setAttribute('aria-label',s('tutTitle'));bh.setAttribute('title',s('tutTitle'));}
   // Tutorial text
   document.getElementById('tutTitle').textContent = s('tutTitle');
   document.getElementById('tutClose').textContent = s('tutClose');
@@ -1721,39 +1724,62 @@ function closeTutorial(){
 }
 
 // ── Tooltip positioning ──────────────────────
-// Auto-shift tooltip horizontally if it would overflow viewport.
-// Arrow follows icon position so it still points correctly.
+// position:fixed + viewport-aware placement.
+// Auto-flips above/below icon, clamps to viewport, arrow follows icon.
 function positionTooltip(tipWrap){
   const bubble = tipWrap.querySelector('.tip-bubble');
   if(!bubble) return;
-  // Reset inline overrides (back to CSS defaults: centered)
-  bubble.style.left = '';
-  bubble.style.right = '';
-  bubble.style.transform = '';
-  bubble.style.removeProperty('--arrow-x');
-  // Measure (bubble has layout even when opacity:0)
-  const bubbleRect = bubble.getBoundingClientRect();
   const wrapRect = tipWrap.getBoundingClientRect();
   const vw = document.documentElement.clientWidth;
+  const vh = window.innerHeight;
   const margin = 8;
-  if(bubbleRect.left < margin){
-    // Overflow left → align bubble's left edge with wrap's left edge
-    // After shift: bubble absolute left = wrap left
-    // Arrow at icon center relative to bubble = wrap.width / 2
-    bubble.style.left = '0';
-    bubble.style.transform = 'translateX(0)';
-    bubble.style.setProperty('--arrow-x', (wrapRect.width / 2) + 'px');
-  } else if(bubbleRect.right > vw - margin){
-    // Overflow right → align bubble's right edge with wrap's right edge
-    // After shift: bubble absolute right = wrap right
-    //   → bubble absolute left = wrap.right - bubble.width
-    // Arrow at icon center relative to bubble = bubble.width - wrap.width/2
-    bubble.style.left = 'auto';
-    bubble.style.right = '0';
-    bubble.style.transform = 'translateX(0)';
-    bubble.style.setProperty('--arrow-x', (bubbleRect.width - wrapRect.width / 2) + 'px');
+  const gap = 6;
+
+  // Reset previous positioning
+  bubble.classList.remove('arrow-top', 'arrow-bottom');
+  bubble.style.removeProperty('--arrow-x');
+  bubble.style.left = '0px';
+  bubble.style.top = '0px';
+
+  // Make visible temporarily to measure natural size
+  const prevVisibility = bubble.style.visibility;
+  const prevOpacity = bubble.style.opacity;
+  bubble.style.visibility = 'hidden';
+  bubble.style.opacity = '1';
+  const bubbleRect = bubble.getBoundingClientRect();
+  const bw = bubbleRect.width;
+  const bh = bubbleRect.height;
+  bubble.style.visibility = prevVisibility;
+  bubble.style.opacity = prevOpacity;
+
+  // Default: below icon, horizontally centered on icon
+  let left = wrapRect.left + wrapRect.width / 2 - bw / 2;
+  let top = wrapRect.bottom + gap;
+  let arrowSide = 'top';  // arrow at top of bubble (pointing up to icon above)
+
+  // Horizontal clamp
+  if(left < margin) left = margin;
+  if(left + bw > vw - margin) left = vw - margin - bw;
+
+  // Vertical: flip to above if overflows bottom
+  if(top + bh > vh - margin){
+    top = wrapRect.top - bh - gap;
+    arrowSide = 'bottom';  // arrow at bottom of bubble (pointing down to icon below)
+    // If also overflows top, just pin to top
+    if(top < margin) top = margin;
   }
-  // else: keep CSS default (centered, arrow at 50%)
+
+  // Apply position
+  bubble.style.left = left + 'px';
+  bubble.style.top = top + 'px';
+  bubble.classList.add(arrowSide === 'top' ? 'arrow-top' : 'arrow-bottom');
+
+  // Arrow X position (icon center relative to bubble left)
+  const iconCenterX = wrapRect.left + wrapRect.width / 2;
+  let arrowX = iconCenterX - left;
+  // Clamp arrow within bubble (leave 10px padding for arrow triangle)
+  arrowX = Math.max(10, Math.min(bw - 10, arrowX));
+  bubble.style.setProperty('--arrow-x', arrowX + 'px');
 }
 
 // ── Copy utils ───────────────────────────────
