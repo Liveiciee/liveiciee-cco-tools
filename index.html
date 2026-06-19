@@ -909,7 +909,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
           <span class="tip-icon">?</span>
           <span class="tip-bubble" id="tipAi">Current Ai price in Amadon (BTC).</span>
         </span>
-        <input type="number" id="gAi" value="9000" min="0.01" step="1">
+        <input type="number" id="gAi" value="9000" min="0.01" step="0.01">
       </div>
       <div class="craft-grp">
         <label class="craft-label" id="lCraft" for="craftToggle">Crafting Cost</label>
@@ -1013,6 +1013,11 @@ let CL = DEFAULT_CL.map(c => ({ ...c }));
 
 let CL_MAP = new Map(CL.map(c => [c.id, c]));
 function rebuildCL_MAP(){ CL_MAP = new Map(CL.map(c => [c.id, c])); }
+// Helper: mutate CL safely + rebuild map in one call
+function mutateCL(fn){
+  fn(CL);
+  rebuildCL_MAP();
+}
 
 const KEYS = {
   theme:       'amadon-theme',
@@ -1032,7 +1037,7 @@ const PALETTE = [
   { id:'mythic',    hex:'#a178fa' }   // MYTHIC — rgb(161,120,250) purple
 ];
 function paletteColor(hex){
-  if(!hex) return null;
+  if(!hex || hex === 'none') return null;  // 'none' = explicit "no color"
   if(hex === COMMON) return COMMON;
   const found = PALETTE.find(p => p.hex.toLowerCase() === hex.toLowerCase());
   return found ? found.hex : null;  // reject colors outside palette
@@ -1072,7 +1077,7 @@ const STR = {
     craft:'Biaya Crafting',
     edit:'Edit', done:'Selesai',
     addItem:'+ Tambah Item', deleteItem:'Hapus', itemLabel:'Nama', newItem:'Item Baru',
-    colorLabel:'Warna',
+    colorLabel:'Warna', iconLabel:'Ikon',
     tutTitle:'Cara Pakai', tutClose:'Tutup',
     tutP1:'1. Masukkan Harga Ai (BTC): harga Ai saat ini di Amadon.',
     tutP2:'2. Tiap item punya 3 input:',
@@ -1105,7 +1110,7 @@ const STR = {
     craft:'Crafting Cost',
     edit:'Edit', done:'Done',
     addItem:'+ Add Item', deleteItem:'Delete', itemLabel:'Name', newItem:'New Item',
-    colorLabel:'Color',
+    colorLabel:'Color', iconLabel:'Icon',
     tutTitle:'How to Use', tutClose:'Close',
     tutP1:'1. Enter Ai Price (BTC): current Ai price in Amadon.',
     tutP2:'2. Each item has 3 inputs:',
@@ -1138,7 +1143,7 @@ const STR = {
     craft:'クラフト費用',
     edit:'編集', done:'完了',
     addItem:'+ アイテム追加', deleteItem:'削除', itemLabel:'名前', newItem:'新規アイテム',
-    colorLabel:'色',
+    colorLabel:'色', iconLabel:'アイコン',
     tutTitle:'使い方', tutClose:'閉じる',
     tutP1:'1. Ai価格 (BTC) を入力: Amadonの現在のAi価格。',
     tutP2:'2. 各アイテムには3つの入力項目があります：',
@@ -1171,7 +1176,7 @@ const STR = {
     craft:'크래프팅 비용',
     edit:'편집', done:'완료',
     addItem:'+ 아이템 추가', deleteItem:'삭제', itemLabel:'이름', newItem:'새 아이템',
-    colorLabel:'색상',
+    colorLabel:'색상', iconLabel:'아이콘',
     tutTitle:'사용 방법', tutClose:'닫기',
     tutP1:'1. Ai 가격 (BTC) 입력: Amadon의 현재 Ai 가격.',
     tutP2:'2. 각 아이템에는 3개의 입력란이 있습니다:',
@@ -1204,7 +1209,7 @@ const STR = {
     craft:'制作费用',
     edit:'编辑', done:'完成',
     addItem:'+ 添加物品', deleteItem:'删除', itemLabel:'名称', newItem:'新物品',
-    colorLabel:'颜色',
+    colorLabel:'颜色', iconLabel:'图标',
     tutTitle:'使用说明', tutClose:'关闭',
     tutP1:'1. 输入 Ai 价格 (BTC): Amadon当前 Ai 价格。',
     tutP2:'2. 每个物品有 3 个输入：',
@@ -1237,7 +1242,7 @@ const STR = {
     craft:'製作費用',
     edit:'編輯', done:'完成',
     addItem:'+ 新增物品', deleteItem:'刪除', itemLabel:'名稱', newItem:'新物品',
-    colorLabel:'顏色',
+    colorLabel:'顏色', iconLabel:'圖標',
     tutTitle:'使用說明', tutClose:'關閉',
     tutP1:'1. 輸入 Ai 價格 (BTC): Amadon當前 Ai 價格。',
     tutP2:'2. 每個物品有 3 個輸入：',
@@ -1283,11 +1288,14 @@ function toast(msg){
 }
 
 // ── Validation helper ────────────────────────
-function getVal(el,decimal=true){
-  const v=decimal?parseFloat(el.value):parseInt(el.value,10);
-  const ok=isFinite(v)&&!isNaN(v)&&v>0;
-  el.classList.toggle('invalid',!ok);
-  return ok?v:null;
+// getVal(el, decimal, allowZero)
+//   - decimal: parse as float (default) or int
+//   - allowZero: when true, 0 is considered valid (for stock quantities)
+function getVal(el, decimal=true, allowZero=false){
+  const v = decimal ? parseFloat(el.value) : parseInt(el.value, 10);
+  const ok = isFinite(v) && !isNaN(v) && (allowZero ? v >= 0 : v > 0);
+  el.classList.toggle('invalid', !ok);
+  return ok ? v : null;
 }
 
 // ── URL params ───────────────────────────────
@@ -1313,8 +1321,11 @@ function buildQS(){
     if(def && def.hasStock !== c.hasStock) p.set(`${c.id}hs`, c.hasStock ? '1' : '0');
     // Cost (only if differs from default)
     if(def && def.cost !== c.cost) p.set(`${c.id}c`, c.cost);
-    // Color (only if differs from default)
-    if(!def || def.color !== c.color) p.set(`${c.id}col`, c.color);
+    // Color (only if differs from default). Skip null/empty to avoid writing "null" to URL.
+    if(!def || def.color !== c.color){
+      if(c.color) p.set(`${c.id}col`, c.color);
+      else p.set(`${c.id}col`, 'none');  // explicit "no color" marker
+    }
     // maxA (only if set)
     if(c.icon && (!def || def.icon !== c.icon)) p.set(`${c.id}ic`, c.icon);
     if(c.maxA != null) p.set(`${c.id}m`, c.maxA);
@@ -1326,7 +1337,7 @@ function buildQS(){
 
 function syncURL(){
   const p=buildQS();
-  try{history.replaceState(null,'',`?${p.toString()}`)}catch(_){}
+  try{ history.replaceState(null,'',`?${p.toString()}`); }catch(e){ console.debug('[syncURL] replaceState failed:', e.message); }
   const base=location.href.split('?')[0];
   const url=`${base}?${p.toString()}`;
   const el=document.getElementById('shareUrl');
@@ -1335,7 +1346,7 @@ function syncURL(){
 }
 
 // ── Auto-save to localStorage ────────────────
-const AUTOSAVE_KEY = 'nina-autosave';
+const AUTOSAVE_KEY = 'amadon-autosave';
 let autoSaveTimer = null;
 
 function autoSave(){
@@ -1347,22 +1358,22 @@ function autoSave(){
         cardOpen: { ...cardOpen },
         gAi: document.getElementById('gAi').value,
         useCost,
-        lang
+        lang,
+        editMode
       };
-      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(data));
-    }catch(_){}
+      lsSet(AUTOSAVE_KEY, JSON.stringify(data));
+    }catch(e){ console.debug('[autoSave] failed:', e.message); }
   }, 500);  // debounce 500ms
 }
 
 function loadAutoSave(){
   try{
-    const raw = localStorage.getItem(AUTOSAVE_KEY);
+    const raw = lsGet(AUTOSAVE_KEY);
     if(!raw) return false;
     const data = JSON.parse(raw);
     if(!data.CL || !Array.isArray(data.CL) || data.CL.length === 0) return false;
     // Restore CL
-    CL = data.CL.map(c => ({ ...c }));
-    rebuildCL_MAP();
+    mutateCL(() => { CL = data.CL.map(c => ({ ...c })); });
     // Restore cardOpen
     if(data.cardOpen){
       Object.keys(cardOpen).forEach(k => delete cardOpen[k]);
@@ -1374,7 +1385,7 @@ function loadAutoSave(){
     if(data.useCost !== undefined) useCost = data.useCost;
     // gAi will be set after renderClusters
     return data;
-  }catch(_){ return false; }
+  }catch(e){ console.debug('[loadAutoSave] failed:', e.message); return false; }
 }
 
 function loadQS(){
@@ -1417,6 +1428,7 @@ function loadItemsFromURL(){
       if(p.has(`${id}l`)) item.label = p.get(`${id}l`);
       if(p.has(`${id}c`)) item.cost = parseInt(p.get(`${id}c`), 10) || 0;
       if(p.has(`${id}col`)) item.color = paletteColor(p.get(`${id}col`));
+      if(p.has(`${id}ic`)) item.icon = p.get(`${id}ic`);
       if(p.has(`${id}m`)) item.maxA = parseInt(p.get(`${id}m`), 10) || null;
       if(p.has(`${id}hs`)) item.hasStock = p.get(`${id}hs`) === '1';
       if(p.has(`${id}dA`)) item.dA = parseInt(p.get(`${id}dA`), 10) || item.dA;
@@ -1425,8 +1437,7 @@ function loadItemsFromURL(){
       newCL.push(item);
     });
     if(newCL.length > 0){
-      CL = newCL;
-      rebuildCL_MAP();
+      mutateCL(() => { CL = newCL; });
     }
   } else {
     // No items= param → just apply cost/color overrides to default CL
@@ -1450,12 +1461,12 @@ const ICON_FALL='<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke=
 let useCost = false;
 function applyUseCost(on){
   useCost = on;
-  try{localStorage.setItem(KEYS.useCost, on?'1':'0')}catch(_){}
-  const btn=document.getElementById('craftToggle');
+  lsSet(KEYS.useCost, on ? '1' : '0');
+  const btn = document.getElementById('craftToggle');
   if(btn){
-    btn.classList.toggle('on',on);
-    btn.setAttribute('aria-checked',String(on));
-    btn.setAttribute('aria-label',s('craft'));
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-checked', String(on));
+    btn.setAttribute('aria-label', s('craft'));
   }
 }
 
@@ -1467,7 +1478,8 @@ function calcOne(id){
   const amadon= getVal(document.getElementById(`a_${id}`));
   const rate  = getVal(document.getElementById(`r_${id}`));
   const stockEl = document.getElementById(`s_${id}`);
-  const stock = stockEl ? getVal(stockEl,false) : null;
+  // Stock is allowed to be 0 (user has 0 items to sell)
+  const stock = stockEl ? getVal(stockEl, false, true) : null;
 
   const amNet = amadon!==null ? amadon-cost : null;
   const mkNet = (rate!==null&&ai!==null) ? (rate*ai)-cost : null;
@@ -1554,6 +1566,7 @@ function renderClusters(){
     const cardType = c.id === 'hp' ? 'is-hash' : 'is-cluster';
     const el = document.createElement('div');
     el.className = 'ccard ' + cardType + (isOpen ? ' open' : '') + (editMode ? ' editing' : '');
+    el.setAttribute('aria-expanded', String(isOpen));
     el.id = `cc_${c.id}`;
     el.dataset.cid = c.id;
     // Apply custom color override (COMMON resolves to var(--text) for auto-contrast)
@@ -1564,7 +1577,7 @@ function renderClusters(){
     const stockRow = c.hasStock ? `
           <div class="srow">
             <label>${s('qty')}<span class="tip-wrap" data-tip="qty"><span class="tip-icon">?</span><span class="tip-bubble">${s('tipQty')}</span></span></label>
-            <input type="number" id="s_${c.id}" value="${escapeHtml(v.s)}" min="1" step="1">
+            <input type="number" id="s_${c.id}" value="${escapeHtml(v.s)}" min="0" step="1">
             <span class="stk-sum" id="sum_${c.id}"></span>
           </div>` : '';
 
@@ -1577,7 +1590,7 @@ function renderClusters(){
       <div class="chead chead-edit">
         <span class="cname">
           <div class="icon-dd" data-icon-dd="${c.id}">
-            <button class="icon-btn" data-action="toggle-icon" data-id="${c.id}" aria-label="Icon" title="Icon">${ICONS[currentIcon] || ICONS.cpu}</button>
+            <button class="icon-btn" data-action="toggle-icon" data-id="${c.id}" aria-label="${s('iconLabel')}" title="${s('iconLabel')}">${ICONS[currentIcon] || ICONS.cpu}</button>
             <div class="icon-menu" data-icon-menu="${c.id}" role="listbox">
               ${Object.keys(ICONS).map(k => `<button class="icon-opt ${currentIcon === k ? 'sel' : ''}" data-action="set-icon" data-id="${c.id}" data-icon="${k}" role="option" aria-label="${k}" title="${k}">${ICONS[k]}</button>`).join('')}
             </div>
@@ -1632,9 +1645,9 @@ function renderClusters(){
         <div class="cbody">
           <div class="igrid">
             <label>${s('amadon')}<span class="tip-wrap" data-tip="amadon"><span class="tip-icon">?</span><span class="tip-bubble">${s('tipAmadon')}</span></span></label>
-            <input type="number" id="a_${c.id}" value="${escapeHtml(v.a)}" min="1" step="1"${maxAttr}>
+            <input type="number" id="a_${c.id}" value="${escapeHtml(v.a)}" min="0" step="1"${maxAttr}>
             <label>${s('rate')} (Ai)<span class="tip-wrap" data-tip="rate"><span class="tip-icon">?</span><span class="tip-bubble">${s('tipRate')}</span></span></label>
-            <input type="number" id="r_${c.id}" value="${escapeHtml(v.r)}" min="0.01" step="0.1">
+            <input type="number" id="r_${c.id}" value="${escapeHtml(v.r)}" min="0" step="0.01">
           </div>${editFields}${stockRow}
           <div class="rrow">
             <div class="rcard amadon">
@@ -1692,7 +1705,10 @@ function toggleCard(id){
   const isOpen = !cardOpen[id];
   cardOpen[id] = isOpen;
   const el = document.getElementById(`cc_${id}`);
-  if(el) el.classList.toggle('open', isOpen);
+  if(el){
+    el.classList.toggle('open', isOpen);
+    el.setAttribute('aria-expanded', String(isOpen));
+  }
 }
 
 let preEditCardOpen = null;
@@ -1723,14 +1739,14 @@ function setEditMode(on){
 function addItem(){
   customIdCounter++;
   const id = 'c' + customIdCounter;
-  CL.push({
+  mutateCL(arr => arr.push({
     id,
     label: s('newItem') + ' ' + customIdCounter,
     dA: 1000000, dR: 100, dS: 10,
     cost: 5000, maxA: null, hasStock: true,
-    color: COMMON,  icon: 'material'  // default to common + material
-  });
-  rebuildCL_MAP();
+    color: COMMON,  icon: 'material'
+  }));
+
   cardOpen[id] = true;
   renderClusters();
   calcAll();
@@ -1742,7 +1758,7 @@ function addItem(){
 }
 
 // Track deleted items for silent undo (5 min window)
-const DELETED_KEY = 'nina-deleted';
+const DELETED_KEY = 'amadon-deleted';
 let lastDeleted = null;
 let deletedTimer = null;
 
@@ -1755,9 +1771,9 @@ function deleteItem(id){
     index: idx,
     cardOpenState: cardOpen[id]
   };
-  CL.splice(idx, 1);
+  mutateCL(arr => arr.splice(idx, 1));
   delete cardOpen[id];
-  rebuildCL_MAP();
+
   renderClusters();
   calcAll();
   // Show silent confirm toast
@@ -1770,9 +1786,9 @@ function undoDelete(){
   lastDeleted = null;
   clearTimeout(deletedTimer);
   // Re-insert at original position
-  CL.splice(Math.min(index, CL.length), 0, item);
+  mutateCL(arr => arr.splice(Math.min(index, arr.length), 0, item));
   if(cardOpenState !== undefined) cardOpen[item.id] = cardOpenState;
-  rebuildCL_MAP();
+
   renderClusters();
   calcAll();
   toast('Restored: ' + item.label);
@@ -1932,13 +1948,13 @@ function isTutDismissed(){
   try{ return localStorage.getItem(KEYS.tutDismissed) === '1'; }catch(_){ return false; }
 }
 function setTutDismissed(v){
-  try{ localStorage.setItem(KEYS.tutDismissed, v ? '1' : '0'); }catch(_){}
+  try{ localStorage.setItem(KEYS.tutDismissed, v ? '1' : '0'); }catch(e){ console.debug('[setTutDismissed] failed:', e.message); }
 }
 function isTutSeen(){
   try{ return localStorage.getItem(KEYS.tutSeen) === '1'; }catch(_){ return false; }
 }
 function setTutSeen(v){
-  try{ localStorage.setItem(KEYS.tutSeen, v ? '1' : '0'); }catch(_){}
+  try{ localStorage.setItem(KEYS.tutSeen, v ? '1' : '0'); }catch(e){ console.debug('[setTutSeen] failed:', e.message); }
 }
 function initTutorial(){
   const banner = document.getElementById('tutBanner');
@@ -2204,9 +2220,11 @@ function snapshotState(){
 function doReset(){
   // Snapshot current state for undo
   lastResetSnapshot = snapshotState();
+  // Clear auto-save (reset = fresh state)
+  lsRemove(AUTOSAVE_KEY);
   // Restore CL to defaults
-  CL = DEFAULT_CL.map(c => ({ ...c }));
-  rebuildCL_MAP();
+  mutateCL(() => { CL = DEFAULT_CL.map(c => ({ ...c })); });
+
   // Reset cardOpen state too (only TSC open by default)
   Object.keys(cardOpen).forEach(k => delete cardOpen[k]);
   // Exit edit mode
@@ -2236,8 +2254,8 @@ function undoReset(){
   const snap = lastResetSnapshot;
   lastResetSnapshot = null;  // one-shot undo
   // Restore CL
-  CL = snap.CL.map(c => ({ ...c }));
-  rebuildCL_MAP();
+  mutateCL(() => { CL = snap.CL.map(c => ({ ...c })); });
+
   // Restore cardOpen
   Object.keys(cardOpen).forEach(k => delete cardOpen[k]);
   Object.assign(cardOpen, snap.cardOpen);
@@ -2276,16 +2294,23 @@ function showUndoToast(){
 
 // ── Theme ────────────────────────────────────
 const THEME_KEY = KEYS.theme;
+// Safe localStorage wrapper — returns null on failure (e.g., private browsing, quota exceeded)
+function lsGet(key){ try{ return localStorage.getItem(key); }catch(_){ console.debug('[lsGet] unavailable:', key); return null; } }
+function lsSet(key, val){ try{ localStorage.setItem(key, val); return true; }catch(_){ console.debug('[lsSet] unavailable:', key); return false; } }
+function lsRemove(key){ try{ localStorage.removeItem(key); }catch(_){ console.debug('[lsRemove] unavailable:', key); } }
+
 function getInitialTheme(){
-  const saved=localStorage.getItem(THEME_KEY);
-  if(saved==='light'||saved==='dark')return saved;
-  return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';
+  const saved = lsGet(THEME_KEY);
+  if(saved==='light'||saved==='dark') return saved;
+  try{
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }catch(_){ return 'light'; }
 }
 function applyTheme(t){
-  document.documentElement.setAttribute('data-theme',t);
-  localStorage.setItem(THEME_KEY,t);
-  const btn=document.getElementById('themeToggle');
-  if(btn)btn.setAttribute('aria-label',t==='dark'?'Switch to light theme':'Switch to dark theme');
+  document.documentElement.setAttribute('data-theme', t);
+  lsSet(THEME_KEY, t);
+  const btn = document.getElementById('themeToggle');
+  if(btn) btn.setAttribute('aria-label', t==='dark' ? 'Switch to light theme' : 'Switch to dark theme');
 }
 
 // ── Language dropdown ────────────────────────
@@ -2340,7 +2365,7 @@ function initStateFromStorage(){
   // theme
   applyTheme(getInitialTheme());
   // craft-cost toggle (loadQS may override via URL)
-  const savedCost = localStorage.getItem(KEYS.useCost);
+  const savedCost = lsGet(KEYS.useCost);
   if(savedCost === '0' || savedCost === '1') useCost = savedCost !== '0';
   // Auto-save restore (only if no URL params)
   const hasURLParams = new URLSearchParams(location.search).toString();
@@ -2484,9 +2509,12 @@ function bindEvents(){
     }
   });
 
-  // Close swatch menus on outside click (separate from lang menu)
+  // Close swatch + icon menus on outside click (separate from lang menu)
   document.addEventListener('click', e => {
-    if(!e.target.closest('.swatch-dd')) closeAllSwatchMenus();
+    if(!e.target.closest('.swatch-dd') && !e.target.closest('.icon-dd')){
+      closeAllSwatchMenus();
+      closeAllIconMenus();
+    }
   });
 
   // Input event delegation for rename-item, set-cost
