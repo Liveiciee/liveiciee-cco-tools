@@ -39,8 +39,8 @@
   --menu-bg:       #ffffff;
   --opt-hover:     #e3e6ea;
   --opt-sel-bg:    #eceef1;
-  --invalid-bg:    rgba(220,38,38,.06);
-  --invalid-bd:    #dc2626;
+  --invalid-bg:    transparent;
+  --invalid-bd:    var(--muted);
 }
 
 /* ── Variables · Dark ──────────────────────── */
@@ -74,8 +74,8 @@
   --menu-bg:       #1c1f26;
   --opt-hover:     #2a2f38;
   --opt-sel-bg:    #2a2f38;
-  --invalid-bg:    rgba(248,113,113,.08);
-  --invalid-bd:    #f87171;
+  --invalid-bg:    transparent;
+  --invalid-bd:    var(--muted);
 }
 
 /* Shared vars: same value in both themes */
@@ -264,7 +264,7 @@ button:active,[role="switch"]:active,.btn:active,.lang-btn:active,.lang-opt:acti
 }
 .ai-grp input:hover{border-color:var(--accent-soft)}
 .ai-grp input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
-input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-bg)}
+input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-bg);opacity:.5}
 
 .btn-grp{display:flex;gap:.42rem;margin-left:auto}
 .btn{
@@ -1331,6 +1331,50 @@ function syncURL(){
   const url=`${base}?${p.toString()}`;
   const el=document.getElementById('shareUrl');
   if(el)el.value=url;
+  autoSave();
+}
+
+// ── Auto-save to localStorage ────────────────
+const AUTOSAVE_KEY = 'nina-autosave';
+let autoSaveTimer = null;
+
+function autoSave(){
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = setTimeout(() => {
+    try{
+      const data = {
+        CL: CL.map(c => ({ ...c })),
+        cardOpen: { ...cardOpen },
+        gAi: document.getElementById('gAi').value,
+        useCost,
+        lang
+      };
+      localStorage.setItem(AUTOSAVE_KEY, JSON.stringify(data));
+    }catch(_){}
+  }, 500);  // debounce 500ms
+}
+
+function loadAutoSave(){
+  try{
+    const raw = localStorage.getItem(AUTOSAVE_KEY);
+    if(!raw) return false;
+    const data = JSON.parse(raw);
+    if(!data.CL || !Array.isArray(data.CL) || data.CL.length === 0) return false;
+    // Restore CL
+    CL = data.CL.map(c => ({ ...c }));
+    rebuildCL_MAP();
+    // Restore cardOpen
+    if(data.cardOpen){
+      Object.keys(cardOpen).forEach(k => delete cardOpen[k]);
+      Object.assign(cardOpen, data.cardOpen);
+    }
+    // Restore lang
+    if(data.lang && STR[data.lang]) lang = data.lang;
+    // Restore useCost (will be applied in initUI)
+    if(data.useCost !== undefined) useCost = data.useCost;
+    // gAi will be set after renderClusters
+    return data;
+  }catch(_){ return false; }
 }
 
 function loadQS(){
@@ -1697,14 +1741,74 @@ function addItem(){
   }, 50);
 }
 
+// Track deleted items for silent undo (5 min window)
+const DELETED_KEY = 'nina-deleted';
+let lastDeleted = null;
+let deletedTimer = null;
+
 function deleteItem(id){
   const idx = CL.findIndex(c => c.id === id);
   if(idx === -1) return;
+  // Snapshot for undo
+  lastDeleted = {
+    item: { ...CL[idx] },
+    index: idx,
+    cardOpenState: cardOpen[id]
+  };
   CL.splice(idx, 1);
   delete cardOpen[id];
   rebuildCL_MAP();
   renderClusters();
   calcAll();
+  // Show silent confirm toast
+  showDeleteToast(id);
+}
+
+function undoDelete(){
+  if(!lastDeleted) return;
+  const { item, index, cardOpenState } = lastDeleted;
+  lastDeleted = null;
+  clearTimeout(deletedTimer);
+  // Re-insert at original position
+  CL.splice(Math.min(index, CL.length), 0, item);
+  if(cardOpenState !== undefined) cardOpen[item.id] = cardOpenState;
+  rebuildCL_MAP();
+  renderClusters();
+  calcAll();
+  toast('Restored: ' + item.label);
+}
+
+// Shared undo toast builder — used by delete + reset undo
+function showUndoToastWithOptions(message, undoFn, extraTimers){
+  const el = document.getElementById('toast');
+  el.innerHTML = '';
+  const text = document.createElement('span');
+  text.textContent = message;
+  const btn = document.createElement('button');
+  btn.className = 'toast-undo-btn';
+  btn.textContent = s('tUndoBtn');
+  btn.onclick = () => {
+    undoFn();
+    el.classList.remove('show', 'with-undo');
+    el.innerHTML = '';
+  };
+  el.appendChild(text);
+  el.appendChild(btn);
+  el.classList.add('show', 'with-undo');
+  clearTimeout(el._t);
+  el._t = setTimeout(() => {
+    el.classList.remove('show', 'with-undo');
+    el.innerHTML = '';
+  }, 5000);
+  if(extraTimers) extraTimers();
+}
+
+function showDeleteToast(itemId){
+  const label = CL_MAP.get(itemId)?.label || lastDeleted?.item?.label || 'Item';
+  showUndoToastWithOptions('Deleted: ' + label, undoDelete, () => {
+    clearTimeout(deletedTimer);
+    deletedTimer = setTimeout(() => { lastDeleted = null; }, 300000);
+  });
 }
 
 function renameItem(id, newLabel){
@@ -2167,26 +2271,7 @@ function undoReset(){
 }
 
 function showUndoToast(){
-  const el = document.getElementById('toast');
-  el.innerHTML = '';
-  const text = document.createElement('span');
-  text.textContent = s('tUndo');
-  const btn = document.createElement('button');
-  btn.className = 'toast-undo-btn';
-  btn.textContent = s('tUndoBtn');
-  btn.onclick = () => {
-    undoReset();
-    el.classList.remove('show', 'with-undo');
-    el.innerHTML = '';
-  };
-  el.appendChild(text);
-  el.appendChild(btn);
-  el.classList.add('show', 'with-undo');
-  clearTimeout(el._t);
-  el._t = setTimeout(() => {
-    el.classList.remove('show', 'with-undo');
-    el.innerHTML = '';
-  }, 5000);  // longer timeout for undo (5s)
+  showUndoToastWithOptions(s('tUndo'), undoReset);
 }
 
 // ── Theme ────────────────────────────────────
@@ -2249,12 +2334,19 @@ function changeLang(code){
 // ── Init ──────────────────────────────────────
 
 // Step 1: read persistent state from localStorage
+let autoSavedData = null;
+
 function initStateFromStorage(){
   // theme
   applyTheme(getInitialTheme());
   // craft-cost toggle (loadQS may override via URL)
   const savedCost = localStorage.getItem(KEYS.useCost);
   if(savedCost === '0' || savedCost === '1') useCost = savedCost !== '0';
+  // Auto-save restore (only if no URL params)
+  const hasURLParams = new URLSearchParams(location.search).toString();
+  if(!hasURLParams){
+    autoSavedData = loadAutoSave();
+  }
 }
 
 // Step 2: read state from URL (overrides storage)
@@ -2416,6 +2508,10 @@ function initUI(){
   applyUseCost(useCost);   // sync toggle visual + aria
   renderClusters();        // cluster inputs now exist in DOM
   loadQS();                // populate inputs from URL (may override useCost)
+  // Restore gAi from auto-save if no URL param
+  if(autoSavedData && autoSavedData.gAi && !new URLSearchParams(location.search).has('ai')){
+    document.getElementById('gAi').value = autoSavedData.gAi;
+  }
   updateStatic();
   initTutorial();
   calcAll();
