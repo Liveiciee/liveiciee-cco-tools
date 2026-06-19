@@ -464,6 +464,48 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 [data-theme="dark"] .swatch-reset:hover{color:#e06565}
 .swatch-reset svg{width:13px;height:13px;stroke:currentColor}
 .swatch-reset.hidden{display:none}
+
+/* ── Icon picker ────────────────────────────── */
+.icon-dd{position:relative}
+.icon-btn{
+  width:24px;height:24px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);border-radius:5px;
+  background:var(--btn-bg);cursor:pointer;
+  padding:0;color:var(--card-accent,var(--accent));
+  flex-shrink:0;position:relative;
+  transition:border-color .15s,transform .12s;
+}
+.icon-btn:hover{border-color:var(--accent);transform:translateY(-1px)}
+.icon-btn svg{width:16px;height:16px;fill:currentColor}
+.icon-btn:focus-visible{outline:2px solid var(--ring);outline-offset:2px}
+.icon-menu{
+  position:absolute;
+  top:calc(100% + 6px);
+  left:0;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:.22rem;
+  background:var(--menu-bg);
+  border:1px solid var(--border);
+  border-radius:8px;
+  box-shadow:var(--shadow-md);
+  padding:.32rem;
+  z-index:50;
+  max-width:140px;
+  opacity:0;transform:translateY(-4px);pointer-events:none;
+  transition:opacity .15s ease,transform .15s ease;
+}
+.icon-dd.open .icon-menu{opacity:1;transform:translateY(0);pointer-events:auto}
+.icon-opt{
+  width:24px;height:24px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border:1.5px solid transparent;border-radius:5px;
+  background:transparent;cursor:pointer;padding:0;
+  color:var(--card-accent,var(--accent));
+  transition:border-color .12s,transform .12s;
+}
+.icon-opt:hover{transform:translateY(-1px)}
+.icon-opt.sel{border-color:var(--accent)}
+.icon-opt svg{width:16px;height:16px;fill:currentColor}
 .edit-fields{margin-bottom:.42rem}
 .edit-fields label{
   font-size:.62rem;font-weight:700;
@@ -492,11 +534,11 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 }
 .chex{
   width:18px;height:18px;flex-shrink:0;
-  transition:fill .2s;
+  display:inline-flex;align-items:center;justify-content:center;
+  fill:var(--card-accent,var(--accent));color:var(--card-accent,var(--accent));
+  transition:fill .2s,color .2s;
 }
-.chex polygon{fill:var(--card-accent,var(--accent));transition:fill .2s}
-.chex circle{fill:var(--acc-bg);transition:fill .15s}
-.chead:hover .chex circle{fill:var(--acc-hover)}
+.chex svg{width:18px;height:18px}
 .carrow{width:14px;height:14px;transition:transform .25s ease,stroke .2s;flex-shrink:0;stroke:var(--card-accent,var(--accent))}
 .ccard.open .carrow{transform:rotate(180deg)}
 .carrow-toggle{
@@ -805,11 +847,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   <header class="hdr">
     <div class="hdr-l">
       <div class="logo-badge">
-        <svg aria-hidden="true" class="hdr-logo" width="22" height="22" viewBox="0 0 24 24">
-          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <line x1="3" y1="6" x2="21" y2="6" stroke-width="2" stroke-linecap="round"/>
-          <path d="M16 10a4 4 0 01-8 0" stroke-width="2" stroke-linecap="round"/>
-        </svg>
+        <svg aria-hidden="true" class="hdr-logo" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       </div>
       <div class="hdr-t">
         <div class="hdr-title" id="hTitle">Amadon P2P Calc</div>
@@ -941,14 +979,33 @@ const COST = 5000;
 // Resolves to var(--text) so it's dark in light mode, light in dark mode.
 const COMMON = 'auto';
 
+// CCO Game Icons (16 types)
+const ICONS = {
+  primary_weapon:'<svg fill="currentColor" viewBox="0 0 250 250"><path d="M220 95V75l-8-2v-3a11 11 0 00-9-11 11 11 0 00-2 0h-24l-2 2h-21a5 5 0 00-5 3 5 5 0 00-1 3v4H98v-6a2 2 0 00-2-2l-2-2H82l-5 5h-6a14 14 0 00-10 4H51l-3 2-6 11v1l1 1v6l4 2 1 3s6 2 7 8l2 1a1 1 0 01-1 2l-5 23-7 3a20 20 0 00-11 16l-3 25a5 5 0 003 6l20 9a15 15 0 0014 0l6-3 1-4v-1h1l4-7a6 6 0 010-4l4-6v-6a17 17 0 014-4s-2-3 0-6a16 16 0 013-5l-1-4 4-6 1 1a8 8 0 015-2h32l2 3h57l4-4h11l7-10v-9h-2V97zm-87 18s-2 12-11 13l-2-1a9 9 0 01-4 0l-14-2v-4s-4 0-4-5a6 6 0 014-6 10 10 0 014-1h2l2-2h16a7 7 0 017 7z"/></svg>',
+  special_weapon:'<svg fill="currentColor" viewBox="0 0 572.4 250"><path d="M563 145a8 8 0 008-9V60c0-6-4-10-9-10h-2l-1-5h-15l-2-11c-1-2-4-4-6-4h-1l-5 2c-2 3-5 7-10 7h-28v6h-10v4H320v-5h-8v-4l-6-6h-11V9c0-2-2-3-4-3s-3 1-3 3v25h-6v10h-4v5H175l-8-7h-16v4h-13v-4l-7-7H81l-6 6v5H61c-3 0-6 3-8 6h-4c-2 0-3 1-3 3v1H36l-4-5h-2v-7c0-2-1-3-3-3H13c-2 0-3 1-3 3l-2 2H6c-2 0-3 1-3 3a618 618 0 01-1 103l3 2v3c-1 1 0 2 1 2l12 7c1 1 2 0 3-1 3-6 11-25 10-53h2v-4h12c0 2 2 4 4 4s4 1 4 3v2l3 4c9 10 22 17 35 17 3 1 7 2 9 5 3 4 2 11-4 15-15 10-28 34-28 50l-7 10 62 30 3-8-5-4s-2-24 6-32c0 0 0-17 12-22 0 0 0-13 15-12a10 10 0 0114-5l2 1 34 1v23l9 8 7-4 2 3-1 4a3 3 0 00-2 2l1 2a3 3 0 01-2 3l-1 1c-1 0-2 2-1 3l10 25c1 3 3 4 6 4l5-1s3 6 10 4l14-6c2-1 4-3 4-5v-3l5-4c2-1 3-4 2-6l-8-24c-1-2-3-4-5-4h-1c-1 0-3 0-3-2s-2-2-4-2h-2c-1 0-3-1-3-3l16-7h38a6 6 0 1111 0h12a6 6 0 1111 0h12a6 6 0 1111 0h12a6 6 0 1111 0h8a6 6 0 1111 0h12a6 6 0 1112 0h12a6 6 0 1112 0h10c5 0 8-4 8-9v-5h80l6 2h10c4 0 9-3 9-8s-4-9-8-9h-14l5-5h10zm-374 11h-22a5 5 0 01-4-5h6s-6-7-6-15c0-4 2-8 4-11 2-4 6-6 10-6h12a18 18 0 0118 19c0 10-8 18-18 18z"/></svg>',
+  destructive_weapon:'<svg fill="currentColor" viewBox="0 0 555.7 250"><path d="M537 32s3-23-18-23-37 15-57 15H247c-11-7-24-10-34-12a9 9 0 00-10 9v3h-23v-2a7 7 0 00-7-7 7 7 0 00-8 7v2h-6v-9a10 10 0 00-9-11 10 10 0 00-11 10v10H67a45 45 0 00-44 45S7 71 7 84s16 15 16 15a44 44 0 0044 44h76c21 32 9 71 0 90a9 9 0 0016 8c22-47 20-83 17-97h59c16 7 11 23 11 23l-11 46a3 3 0 002 3c8 1 17 4 22 6a3 3 0 004-2 3 3 0 00-1-2l-1-2a3 3 0 010-2l8-32 3-3h28a31 31 0 009-22v-13h49v14a8 8 0 004 7v54a12 12 0 0025 0v-54a8 8 0 004-7v-14h71c20 0 36 16 57 16s18-24 18-24c17 0 13-52 13-52s4-52-13-52zM298 164a9 9 0 01-9 8h-10l-6-9c-2-4 0-9 2-12h16a6 6 0 016 6z"/></svg>',
+  healing:'<svg fill="currentColor" viewBox="0 0 223.9 250"><path d="M213 97h-73V24H84v73H11v56h73v73h56v-73h73z"/></svg>',
+  helmet:'<svg fill="currentColor" viewBox="0 0 223.9 250"><path d="M216 152l-4-9 1-2v-1c0-49-17-81-25-93l-4-5-5-7v-5S153 6 110 6s-57 8-73 21v4S27 41 24 48l-6 16c-2 0-3 0-4 2-1 3-4 9-4 15l3 17v3c0 8 2 40 6 52 8 23 22 28 27 29l3 1h7l1 1h6l15 11 31 14 23 15 29 9c11 11 24 18 35-2 23-38 17-49 17-49l3-17v-13zm-12 21c-9 7-22 10-33 8l-13-3c-12-3-24-8-35-15l-29-18 2-63 8-4 17 2c3 1 6-2 6-4V66c23-26 45-25 53-23h1l5 6c7 12 23 43 23 92l-1 27-4 5z"/></svg>',
+  upper_armor:'<svg fill="currentColor" viewBox="0 0 223.9 250"><path d="M218 150l-2-7-2-3v-5c0-3-2-3-2-3-1-5-3-6-3-6a1004 1004 0 00-3-26l-1-3-2-8h1l-3-10c-1-2-3-2-3-2l-4-6-5-10v-1c0-2-2-6-8-11-8-8-14-8-15-8h-2l-16-4-1 1-2-1-2-1c-2-1-3-7-3-9-1-2-2-3-4-3a125 125 0 00-47 0c-2 0-4 1-5 3l-2 9-2 1h-4s-4 0-16 5c0 0 0-2-1-1-2 0-8 0-16 8-6 5-7 9-8 11v1l-5 10-4 6s-2 0-3 2l-3 10 1 1-2 7-1 3v4l-3 23s-2 0-3 5c0 0-2 0-2 3v5l-2 3-2 6-1 10c0 4 5 5 5 8v3l-2 3v5s0 4 3 6v2l-1 2 2 7 2 3 2 2c2 1 5 5 6 12v2l17-1 1-28-1-25-1-11s3-3 3-12c0-8 12-37 15-41l3 2 6 18 1 32s-3 9-2 17l-1 1v33c0 8 4 15 11 19l9 5c6 4 17 14 29 14 13 0 23-10 30-14l8-5c7-4 12-11 11-19l1-33-1-1c0-8-3-17-3-17 2-6 0-27 1-32l7-18 2-2c4 4 15 33 15 41 0 9 3 12 3 12v11s-2 9-2 25l2 28 16 1v-2c2-7 5-11 6-12l2-2c2-1 2-3 2-3l2-7-1-2 1-2c2-2 2-6 2-6v-5l-2-3v-3c0-3 5-4 5-8l-1-9z"/></svg>',
+  lower_armor:'<svg fill="currentColor" viewBox="0 0 223.9 250"><path d="M193 146v-9l-2-12c2-4 2-9 2-9l-5-36c0-3-3-4-3-4v-9c3-14-5-25-5-25h-2l-6-22c-1-5-5-8-9-10-13-4-31-7-55-7-22 0-35 3-47 7-4 2-8 5-9 10l-6 22h-2s-8 11-5 25v9s-3 1-3 4l-5 36s0 5 2 9l-2 12v9c-1 3 1 12 5 14l1 11s-5 11-2 23c2 11 5 16 5 16l2 30c0 4 4 7 8 7h30c4 0 7-2 8-6 4-20 19-92 24-92s20 72 24 92c1 4 4 6 8 6h30c4 0 8-3 8-7l2-30s3-5 5-17c3-11-2-22-2-22l1-11c4-3 6-11 5-14z"/></svg>',
+  boots:'<svg fill="currentColor" viewBox="0 0 223.9 250"><path d="M126 217l-3-9c-3-3-18-10-23-14-4-3-9-6-12-10l-11-10c-4-12-5-29-5-41s7-52 7-52l9-19v-4s1 1 1-2l-1-2-1-1v-1l1-1-2-2-16-2c-5-1-8 1-8 1l-20-3c-8 0-22 3-26 5s-1 6-1 6v10c2 15 1 54 1 62l-2 17-2 17-1 15c0 6-3 15-3 15l-1 5v8c0 3 3 6 3 6h1c1 2 5 3 5 3h1l1 1 6 3h1l2 1h5l4-1 5 2 3 4c2 0 3 3 4 4l5 3h2v1c2 2 8 2 8 2l1 1h10l1 2 8-1 5-1 11-3v2c6 0 22-6 25-7s4-6 5-8c0-2-3-2-3-2z"/><path d="M217 192l-1-8-1-11-2-26h-2s-2-7-2-16l-2-56c0-2 1-3 3-5l2-4 3-22v-7l-4-10s-13-14-36-14c0 0-28-1-37 5l-1 3-1 3-1 2 1 2-1 2 4 14-1 1 9 34 3 7v4l-2 7-1 29-4 15-2 3-4 2-12 1h-3c-4 0-16 2-18 12-3 12-2 15 6 25l1 1h1l6 5h3l6 4h2l1 1 7 1 1-1h3v1h4l2-1 8 3h2l8 6 1-1 1 1 8 1 3 2 6 1 1-2 1 1h1v1s3 0 7-3v2s9-4 13-4c4-1 10-3 10-5v-2-4z"/></svg>',
+  backpack:'<svg fill="currentColor" viewBox="0 0 312.3 312.3"><path d="M102 28c0-5 5-10 11-10h87c5 0 10 5 10 10v8l11 11V27c0-12-9-21-21-21h-88c-11 0-20 9-20 21v19l10-10v-8z"/><path d="M128 41l1 152h54l2-152h-29zM71 42c-3-6-9-7-15-5L39 48c-4 2-6 6-5 11l16 162c0 6 3 11 6 16l4 2 1-150c0-9 4-18 10-24l8-8-8-14zM242 262v-52l-44-6h-84l-44 6v65l49 32h75l49-32-1-13zM273 47l-17-9c-5-3-12-1-15 4l-8 14 8 8c7 6 10 15 10 24l1 150 4-2c4-5 6-10 7-16l16-162c0-5-2-9-6-11z"/><path d="M241 199V92v-4c-1-4-3-8-6-11l-35-35-2 145v-1 7l43 6zM72 88l-1 4v107l44-7-2-150-36 35c-3 3-5 7-5 11z"/></svg>',
+  cpu:'<svg fill="currentColor" viewBox="0 0 250 250"><path d="M250 94V74h-46V46h-28V0h-20v46h-21V0h-20v46H94V0H74v46H46v28H0v20h46v21H0v20h46v21H0v20h46v28h28v46h20v-46h21v46h20v-46h21v46h20v-46h28v-28h46v-20h-46v-21h46v-20h-46V94h46zm-84 72H84V84h82v82z"/></svg>',
+  memory_card:'<svg fill="currentColor" viewBox="0 0 250 250"><path d="M232 70l-58-58c-5-5-13-5-17 0L94 75l-1 26-71 71c-5 5-5 13 0 17l5 6-13 14 6 6 5-5 4 5-4 4 8 7 3-4 6 6-4 5 7 6 3-3 6 5 10-10 5 6c5 4 13 4 18 0l83-83-7-7 13-12 6 6 50-50c6-6 6-15 0-21z"/></svg>',
+  ammo_energy_v2:'<svg fill="currentColor" viewBox="0 0 250 250"><path d="M226 81c7 0 12-6 12-13V35c0-7-5-12-12-12h-43c-2-8-10-14-19-14H68c-9 0-17 6-19 14H30c-7 0-13 5-13 12v3h-2c-2 0-4 2-4 4v20c1 2 2 4 4 4h2v3c0 7 6 12 13 12h18v15H30c-7 0-13 6-13 13v3h-2c-2 0-4 1-4 3v21c1 1 2 3 4 3h2v3c0 7 6 12 13 12h18v15H30c-7 0-13 6-13 13v2h-2c-2 1-4 2-4 4v21c1 1 2 3 4 3h2v3c0 7 6 12 13 12h19c2 8 10 14 19 14h96c9 0 17-6 19-14h43c7 0 12-5 12-12v-33c0-7-5-13-12-13h-42v-15h42c7 0 12-5 12-12v-33c0-7-5-13-12-13h-42V81h42z"/></svg>',
+  consumable:'<svg viewBox="0 0 250 250"><path d="M100 20h50v30h-50zM125 50v30M90 80h70l20 40v90c0 10-10 20-20 20H90c-10 0-20-10-20-20V120l20-40z" fill="none" stroke="currentColor" stroke-width="10"/><path d="M100 140h50M110 170h30" fill="none" stroke="currentColor" stroke-width="10"/></svg>',
+  material:'<svg fill="currentColor" viewBox="0 0 250 250"><path fill-rule="evenodd" d="M175 38L225 125L175 212H75L25 125L75 38H175ZM125 85a40 40 0 1 0 0 80 40 40 0 0 0 0-80z"/></svg>',
+  furniture:'<svg fill="currentColor" viewBox="0 0 250 250"><path d="M75 20h100v120H75zM55 140h140v20H55zM65 160h20v70H65zM165 160h20v70h-20z"/></svg>',
+  event:'<svg fill="currentColor" viewBox="0 0 250 250"><path d="M125 20L155 90H230L170 135L195 210L125 165L55 210L80 135L20 90H95L125 20Z"/></svg>',
+};
+
 // DEFAULT_CL: snapshot for reset. CL is mutable at runtime.
-// Each item has explicit color (palette hex or COMMON='auto') so default theme is consistent.
 const DEFAULT_CL = [
-  { id:'tsc',   label:'TSC',            dA:1000000, dR:105,  dS:10, cost:5000, maxA:null,   hasStock:true,  color:'#a8842c' },  // rare (gold)
-  { id:'mtc',   label:'MTC',            dA:500000,  dR:50,   dS:10, cost:5000, maxA:null,   hasStock:true,  color:'#a8842c' },  // rare (gold)
-  { id:'atpc',  label:'ATPC',           dA:1059000, dR:105,  dS:10, cost:5000, maxA:null,   hasStock:true,  color:'#a8842c' },  // rare (gold)
-  { id:'matpc', label:'MATPC',          dA:1040000, dR:105,  dS:10, cost:5000, maxA:null,   hasStock:true,  color:'#a8842c' },  // rare (gold)
-  { id:'hp',    label:'Hash Processor', dA:15000,   dR:1.85, dS:1,  cost:0,    maxA:15000,  hasStock:true,  color:COMMON }      // common (auto-contrast)
+  { id:'tsc',   label:'TSC',            dA:1000000, dR:105,  dS:10, cost:5000, maxA:null,   hasStock:true,  color:'#ccc541', icon:'material' },
+  { id:'mtc',   label:'MTC',            dA:500000,  dR:50,   dS:10, cost:5000, maxA:null,   hasStock:true,  color:'#ccc541', icon:'material' },
+  { id:'atpc',  label:'ATPC',           dA:1059000, dR:105,  dS:10, cost:5000, maxA:null,   hasStock:true,  color:'#ccc541', icon:'material' },
+  { id:'matpc', label:'MATPC',          dA:1040000, dR:105,  dS:10, cost:5000, maxA:null,   hasStock:true,  color:'#ccc541', icon:'material' },
+  { id:'hp',    label:'Hash Processor', dA:15000,   dR:1.85, dS:1,  cost:0,    maxA:15000,  hasStock:true,  color:COMMON,    icon:'material' }
 ];
 
 // CL: runtime-mutable list of clusters (users can add/rename/delete)
@@ -966,13 +1023,13 @@ const KEYS = {
 
 // Allowed palette for item color (7 rarity tiers)
 const PALETTE = [
-  { id:'trash',     hex:'#6b6b6b' },  // grey
-  { id:'common',    hex:COMMON },     // auto-contrast (dark in light / light in dark)
-  { id:'quality',   hex:'#4d7c0f' },  // green (olive)
-  { id:'rare',      hex:'#a8842c' },  // yellow/gold (matches cluster default)
-  { id:'legendary', hex:'#9333ea' },  // violet pink
-  { id:'epic',      hex:'#b91c1c' },  // red (crimson)
-  { id:'mythic',    hex:'#6b1d6b' }   // dark magenta (plum)
+  { id:'trash',     hex:'#898c8a' },  // TRASH — rgb(137,140,138)
+  { id:'common',    hex:COMMON },     // COMMON — auto-contrast (white in dark, dark in light)
+  { id:'quality',   hex:'#4fbd74' },  // RARE/QUALITY — rgb(79,189,116) green
+  { id:'rare',      hex:'#ccc541' },  // RARE — gold-yellow #ccc541
+  { id:'legendary', hex:'#e630c0' },  // LEGENDARY — rgb(230,48,192) magenta-pink
+  { id:'epic',      hex:'#ff1f59' },  // EPIC — rgb(255,31,89) red-pink
+  { id:'mythic',    hex:'#a178fa' }   // MYTHIC — rgb(161,120,250) purple
 ];
 function paletteColor(hex){
   if(!hex) return null;
@@ -1259,6 +1316,7 @@ function buildQS(){
     // Color (only if differs from default)
     if(!def || def.color !== c.color) p.set(`${c.id}col`, c.color);
     // maxA (only if set)
+    if(c.icon && (!def || def.icon !== c.icon)) p.set(`${c.id}ic`, c.icon);
     if(c.maxA != null) p.set(`${c.id}m`, c.maxA);
   });
   if(lang!=='en')p.set('l',lang);
@@ -1309,7 +1367,7 @@ function loadItemsFromURL(){
           label: 'Custom',
           dA: 1000000, dR: 100, dS: 10,
           cost: 5000, maxA: null, hasStock: true,
-          color: COMMON  // default to common (auto-contrast)
+          color: COMMON,  icon: 'material'  // default to common + material
         };
       }
       if(p.has(`${id}l`)) item.label = p.get(`${id}l`);
@@ -1331,14 +1389,18 @@ function loadItemsFromURL(){
     CL.forEach(c => {
       if(p.has(`${c.id}c`)) c.cost = parseInt(p.get(`${c.id}c`), 10) || 0;
       if(p.has(`${c.id}col`)) c.color = paletteColor(p.get(`${c.id}col`));
+      if(p.has(`${c.id}ic`)) c.icon = p.get(`${c.id}ic`);
     });
   }
 }
 
 // ── Calc ─────────────────────────────────────
-const ICON_MARKET='<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>';
-const ICON_AMADON='<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>';
-const ICON_FALL='<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>';
+// Market wins: store/shopfront icon (sell to market)
+const ICON_MARKET='<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5"/><path d="M4 9v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M9 21v-6h6v6"/><line x1="3" y1="9" x2="21" y2="9"/></svg>';
+// Amadon wins: coins/money bag icon (sell to Amadon for fixed price)
+const ICON_AMADON='<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
+// Tie/fallback: scales icon (equal/balanced)
+const ICON_FALL='<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><line x1="7" y1="6" x2="17" y2="6"/><path d="M7 6l-3 7a3 3 0 0 0 6 0L7 6z"/><path d="M17 6l-3 7a3 3 0 0 0 6 0l-3-7z"/></svg>';
 
 // Global toggle: whether to apply per-cluster crafting cost
 let useCost = false;
@@ -1466,13 +1528,16 @@ function renderClusters(){
     let headerHtml;
     if(editMode){
       const currentColor = c.color || '';
+      const currentIcon = c.icon || 'cpu';
       headerHtml = `
       <div class="chead chead-edit">
         <span class="cname">
-          <svg class="chex" aria-hidden="true" viewBox="0 0 24 24" aria-hidden="true">
-            <polygon points="21,12 16.5,4.21 7.5,4.21 3,12 7.5,19.79 16.5,19.79"/>
-            <circle cx="12" cy="12" r="3.5"/>
-          </svg>
+          <div class="icon-dd" data-icon-dd="${c.id}">
+            <button class="icon-btn" data-action="toggle-icon" data-id="${c.id}" aria-label="Icon" title="Icon">${ICONS[currentIcon] || ICONS.cpu}</button>
+            <div class="icon-menu" data-icon-menu="${c.id}" role="listbox">
+              ${Object.keys(ICONS).map(k => `<button class="icon-opt ${currentIcon === k ? 'sel' : ''}" data-action="set-icon" data-id="${c.id}" data-icon="${k}" role="option" aria-label="${k}" title="${k}">${ICONS[k]}</button>`).join('')}
+            </div>
+          </div>
           <input class="cname-input" data-action="rename-item" data-id="${c.id}" value="${escapeHtml(c.label)}" aria-label="${s('itemLabel')}" maxlength="40">
         </span>
         <div class="chead-actions">
@@ -1503,10 +1568,7 @@ function renderClusters(){
       headerHtml = `
       <div class="chead" data-action="toggle-card" data-id="${c.id}">
         <span class="cname">
-          <svg class="chex" aria-hidden="true" viewBox="0 0 24 24" aria-hidden="true">
-            <polygon points="21,12 16.5,4.21 7.5,4.21 3,12 7.5,19.79 16.5,19.79"/>
-            <circle cx="12" cy="12" r="3.5"/>
-          </svg>
+          <span class="chex">${ICONS[c.icon] || ICONS.cpu}</span>
           ${escapeHtml(c.label)}
         </span>
         <svg class="carrow" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
@@ -1622,7 +1684,7 @@ function addItem(){
     label: s('newItem') + ' ' + customIdCounter,
     dA: 1000000, dR: 100, dS: 10,
     cost: 5000, maxA: null, hasStock: true,
-    color: COMMON  // default to common (auto-contrast)
+    color: COMMON,  icon: 'material'  // default to common + material
   });
   rebuildCL_MAP();
   cardOpen[id] = true;
@@ -1688,6 +1750,34 @@ function setColor(id, hex){
     if(reset) reset.classList.toggle('hidden', !c.color);
   }
   syncURL();
+}
+
+// ── Icon picker ──────────────────────────────
+function setIcon(id, iconKey){
+  const c = CL_MAP.get(id);
+  if(!c || !ICONS[iconKey]) return;
+  c.icon = iconKey;
+  // Update icon button display
+  const dd = document.querySelector(`[data-icon-dd="${id}"]`);
+  if(dd){
+    dd.querySelector('.icon-btn').innerHTML = ICONS[iconKey];
+    dd.querySelectorAll('.icon-opt').forEach(o => {
+      o.classList.toggle('sel', o.dataset.icon === iconKey);
+    });
+  }
+  syncURL();
+}
+
+function toggleIconMenu(id){
+  document.querySelectorAll('.icon-dd.open').forEach(dd => {
+    if(dd.dataset.iconDd !== id) dd.classList.remove('open');
+  });
+  const dd = document.querySelector(`[data-icon-dd="${id}"]`);
+  if(dd) dd.classList.toggle('open');
+}
+
+function closeAllIconMenus(){
+  document.querySelectorAll('.icon-dd.open').forEach(dd => dd.classList.remove('open'));
 }
 
 function toggleSwatchMenu(id){
@@ -2227,11 +2317,21 @@ function bindEvents(){
       case 'delete-item':  deleteItem(target.dataset.id); break;
       case 'toggle-swatch':
         e.stopPropagation();
+        closeAllIconMenus();
         toggleSwatchMenu(target.dataset.id);
         break;
       case 'set-color':
         setColor(target.dataset.id, target.dataset.color);
         closeAllSwatchMenus();
+        break;
+      case 'toggle-icon':
+        e.stopPropagation();
+        closeAllSwatchMenus();
+        toggleIconMenu(target.dataset.id);
+        break;
+      case 'set-icon':
+        setIcon(target.dataset.id, target.dataset.icon);
+        closeAllIconMenus();
         break;
       case 'toggle-tut':  toggleTutorial(); break;
       case 'close-tut':
