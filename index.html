@@ -1427,19 +1427,12 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
     <div class="summary-inner">
       <header class="summary-head">
         <div class="summary-head-l">
-          <span class="summary-eyebrow">Overview</span>
-          <h2 class="summary-title" id="summaryTitle">Summary</h2>
+          <span class="summary-eyebrow" id="sumOverview">Overview</span>
+          <h2 class="summary-title" id="sumTitle">Summary</h2>
         </div>
         <div class="summary-head-r">
-          <!-- Compact stat strip: counts + total best (single line, mono) -->
           <div class="sum-stats" id="sumStats">
-            <span class="stat-am">Amadon <b>0</b></span>
-            <span class="sep">·</span>
-            <span class="stat-mk">Market <b>0</b></span>
-            <span class="sep">·</span>
-            <span class="stat-bad">Incomplete <b>0</b></span>
-            <span class="sep">·</span>
-            <span class="stat-best">Best total <b>–</b></span>
+            <!-- Populated by updateSummary() -->
           </div>
           <button class="summary-close" id="summaryClose" data-action="toggle-summary" aria-label="Close summary">
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
@@ -1450,42 +1443,40 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
         </div>
       </header>
 
-      <!-- Filter + sort toolbar -->
       <div class="sum-toolbar">
         <div class="sum-filter">
-          <span class="fl-lbl">Show</span>
-          <button class="sum-chip on" data-action="sum-filter" data-filter="all">All</button>
-          <button class="sum-chip" data-action="sum-filter" data-filter="amadon">Amadon</button>
-          <button class="sum-chip" data-action="sum-filter" data-filter="market">Market</button>
-          <button class="sum-chip" data-action="sum-filter" data-filter="incomplete">Incomplete</button>
+          <span class="fl-lbl" id="sumShowLbl">Show</span>
+          <button class="sum-chip on" data-action="sum-filter" data-filter="all"><span id="sumFltAll">All</span></button>
+          <button class="sum-chip" data-action="sum-filter" data-filter="amadon"><span id="sumFltAm">Amadon</span></button>
+          <button class="sum-chip" data-action="sum-filter" data-filter="market"><span id="sumFltMk">Market</span></button>
+          <button class="sum-chip" data-action="sum-filter" data-filter="incomplete"><span id="sumFltInc">Incomplete</span></button>
         </div>
         <span class="sum-spacer"></span>
         <div class="sum-sort">
-          <span class="so-lbl">Sort</span>
-          <button class="sum-chip on" data-action="sum-sort" data-sort="default">Order
+          <span class="so-lbl" id="sumSortLbl">Sort</span>
+          <button class="sum-chip on" data-action="sum-sort" data-sort="default"><span id="sumSrtOrder">Order</span>
           </button>
-          <button class="sum-chip" data-action="sum-sort" data-sort="diff">Diff
+          <button class="sum-chip" data-action="sum-sort" data-sort="diff"><span id="sumSrtDiff">Diff</span>
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg>
           </button>
-          <button class="sum-chip" data-action="sum-sort" data-sort="bep">BEP dist
+          <button class="sum-chip" data-action="sum-sort" data-sort="bep"><span id="sumSrtBep">BEP dist</span>
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg>
           </button>
-          <button class="sum-chip" data-action="sum-sort" data-sort="name">Name
+          <button class="sum-chip" data-action="sum-sort" data-sort="name"><span id="sumSrtName">Name</span>
             <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg>
           </button>
         </div>
       </div>
 
-      <!-- List body - sticky header + scrollable rows -->
       <div class="sum-list-wrap">
         <div class="sum-list-head">
-          <span class="sh-name">Item</span>
-          <span class="sh-qty">Qty</span>
-          <span class="sh-am sh-num">Amadon</span>
-          <span class="sh-mk sh-num">Market</span>
-          <span class="sh-bep sh-num">BEP Ai</span>
-          <span class="sh-diff sh-num">Diff</span>
-          <span class="sh-winner">Winner</span>
+          <span class="sh-name" id="shItem">Item</span>
+          <span class="sh-qty" id="shQty">Qty</span>
+          <span class="sh-am sh-num" id="shAm">Amadon</span>
+          <span class="sh-mk sh-num" id="shMk">Market</span>
+          <span class="sh-bep sh-num" id="shBep">BEP Ai</span>
+          <span class="sh-diff sh-num" id="shDiff">Diff</span>
+          <span class="sh-winner" id="shWinner">Winner</span>
         </div>
         <div class="sum-list" id="sumList">
           <!-- Rows rendered by JS -->
@@ -1592,7 +1583,7 @@ const STR = {
     tShare:'Link disalin!', tFail:'Gagal menyalin',
     tUndo:'Undo reset?', tUndoBtn:'Undo',
     aLang:'Pilih bahasa',
-    cpDiff:'Selisih', cpTotal:'Total', cpIncomplete:'Data belum lengkap',
+    cpTotal:'Total', cpIncomplete:'Data belum lengkap',
     craft:'Biaya Crafting',
     edit:'Edit', done:'Selesai',
     addItem:'+ Tambah Item', deleteItem:'Hapus', itemLabel:'Nama', newItem:'Item Baru',
@@ -1609,7 +1600,25 @@ const STR = {
     tipAmadon:'Harga jual item ke Amadon. Cek di menu Amadon di game.',
     tipRate:'Rasio Item per Ai. Contoh: 105 artinya 1 item ini = 105 Ai. Tanya pemain / cek chat market.',
     tipQty:'Jumlah item yang kamu punya / mau jual.',
-    tipCost:'Biaya crafting item (otomatis dipotong dari net). Set 0 kalau gak ada biaya.'
+    tipCost:'Biaya crafting item (otomatis dipotong dari net). Set 0 kalau gak ada biaya.',
+    sumOverview:'Ringkasan', sumTitle:'Ringkasan', sumBtn:'Ringkasan',
+    sumShow:'Tampil', sumSort:'Urut',
+    sumAll:'Semua', sumMarket:'Market', sumIncomplete:'Belum lengkap',
+    sumOrder:'Urutan', sumDiff:'Selisih', sumBepDist:'Jarak BEP', sumName:'Nama',
+    sumItem:'Item', sumBepAi:'BEP Ai', sumWinner:'Pemenang',
+    sumBestTotal:'Total terbaik', sumEmpty:'Tidak ada item yang cocok filter.',
+    sumClose:'Tutup ringkasan',
+    // ── keys added for full i18n coverage ──
+    noscript:'Kalkulator ini butuh JavaScript. Aktifkan JavaScript di browser kamu.',
+    customItem:'Kustom', itemFallback:'Item',
+    deletedPrefix:'Dihapus: {0}', restoredPrefix:'Dipulihkan: {0}',
+    incompleteShort:'belum lengkap', sharePlaceholder:'URL Bagikan…',
+    themeLight:'Ganti ke tema terang', themeDark:'Ganti ke tema gelap',
+    themeToggle:'Ganti tema', toggleCard:'Buka/Tutup',
+    resetColor:'Reset warna', itemClusters:'Klaster item',
+    tier_trash:'Sampah', tier_common:'Biasa', tier_quality:'Bagus',
+    tier_rare:'Langka', tier_legendary:'Legendaris',
+    tier_epic:'Epik', tier_mythic:'Mitik'
   },
   en:{
     title:'Amadon P2P Calc', sub:'Sell to Amadon or players?',
@@ -1625,7 +1634,7 @@ const STR = {
     tShare:'Link copied!', tFail:'Copy failed',
     tUndo:'Undo reset?', tUndoBtn:'Undo',
     aLang:'Choose language',
-    cpDiff:'Diff', cpTotal:'Total', cpIncomplete:'Incomplete data',
+    cpTotal:'Total', cpIncomplete:'Incomplete data',
     craft:'Crafting Cost',
     edit:'Edit', done:'Done',
     addItem:'+ Add Item', deleteItem:'Delete', itemLabel:'Name', newItem:'New Item',
@@ -1642,7 +1651,25 @@ const STR = {
     tipAmadon:'Sell price to Amadon. Check the Amadon menu in-game.',
     tipRate:'Item-to-Ai ratio. E.g. 105 means 1 of this item = 105 Ai. Ask players / check market chat.',
     tipQty:'How many items you have / want to sell.',
-    tipCost:'Crafting cost of the item (auto-subtracted from net). Set 0 if no cost.'
+    tipCost:'Crafting cost of the item (auto-subtracted from net). Set 0 if no cost.',
+    sumOverview:'Overview', sumTitle:'Summary', sumBtn:'Summary',
+    sumShow:'Show', sumSort:'Sort',
+    sumAll:'All', sumMarket:'Market', sumIncomplete:'Incomplete',
+    sumOrder:'Order', sumDiff:'Diff', sumBepDist:'BEP dist', sumName:'Name',
+    sumItem:'Item', sumBepAi:'BEP Ai', sumWinner:'Winner',
+    sumBestTotal:'Best total', sumEmpty:'No items match the current filter.',
+    sumClose:'Close summary',
+    // ── keys added for full i18n coverage ──
+    noscript:'This calculator requires JavaScript to function. Please enable JavaScript in your browser.',
+    customItem:'Custom', itemFallback:'Item',
+    deletedPrefix:'Deleted: {0}', restoredPrefix:'Restored: {0}',
+    incompleteShort:'incomplete', sharePlaceholder:'Share URL…',
+    themeLight:'Switch to light theme', themeDark:'Switch to dark theme',
+    themeToggle:'Toggle theme', toggleCard:'Toggle',
+    resetColor:'Reset color', itemClusters:'Item clusters',
+    tier_trash:'Trash', tier_common:'Common', tier_quality:'Quality',
+    tier_rare:'Rare', tier_legendary:'Legendary',
+    tier_epic:'Epic', tier_mythic:'Mythic'
   },
   ja:{
     title:'Amadon P2P Calc', sub:'アマドンとプレイヤー、どちらに売る？',
@@ -1658,7 +1685,7 @@ const STR = {
     tShare:'リンクをコピー！', tFail:'コピー失敗',
     tUndo:'リセットを元に戻す？', tUndoBtn:'元に戻す',
     aLang:'言語を選択',
-    cpDiff:'差額', cpTotal:'合計', cpIncomplete:'データ不完全',
+    cpTotal:'合計', cpIncomplete:'データ不完全',
     craft:'クラフト費用',
     edit:'編集', done:'完了',
     addItem:'+ アイテム追加', deleteItem:'削除', itemLabel:'名前', newItem:'新規アイテム',
@@ -1675,7 +1702,25 @@ const STR = {
     tipAmadon:'アマドンへの売却価格。ゲーム内のアマドンメニューで確認。',
     tipRate:'アイテム対Aiの比率。例：105 = 1個 = 105 Ai。プレイヤーに聞く / マーケットチャット確認。',
     tipQty:'持っている / 売りたいアイテムの数。',
-    tipCost:'アイテムのクラフト費用 (純利益から自動差し引き)。費用なしなら0。'
+    tipCost:'アイテムのクラフト費用 (純利益から自動差し引き)。費用なしなら0。',
+    sumOverview:'概要', sumTitle:'サマリー', sumBtn:'サマリー',
+    sumShow:'表示', sumSort:'並替',
+    sumAll:'すべて', sumMarket:'マーケット', sumIncomplete:'未入力',
+    sumOrder:'順序', sumDiff:'差額', sumBepDist:'BEP距離', sumName:'名前',
+    sumItem:'アイテム', sumBepAi:'BEP Ai', sumWinner:'勝者',
+    sumBestTotal:'最高合計', sumEmpty:'フィルターに一致するアイテムがありません。',
+    sumClose:'サマリーを閉じる',
+    // ── keys added for full i18n coverage ──
+    noscript:'この計算機は JavaScript が必要です。ブラウザで JavaScript を有効にしてください。',
+    customItem:'カスタム', itemFallback:'アイテム',
+    deletedPrefix:'削除: {0}', restoredPrefix:'復元: {0}',
+    incompleteShort:'未入力', sharePlaceholder:'共有URL…',
+    themeLight:'ライトテーマへ切替', themeDark:'ダークテーマへ切替',
+    themeToggle:'テーマ切替', toggleCard:'開閉',
+    resetColor:'色をリセット', itemClusters:'アイテムクラスター',
+    tier_trash:'ゴミ', tier_common:'コモン', tier_quality:'クオリティ',
+    tier_rare:'レア', tier_legendary:'レジェンダリー',
+    tier_epic:'エピック', tier_mythic:'ミシック'
   },
   ko:{
     title:'Amadon P2P Calc', sub:'아마돈과 플레이어, 어디에 팔까?',
@@ -1691,7 +1736,7 @@ const STR = {
     tShare:'링크 복사!', tFail:'복사 실패',
     tUndo:'초기화 실행 취소?', tUndoBtn:'실행 취소',
     aLang:'언어 선택',
-    cpDiff:'차액', cpTotal:'합계', cpIncomplete:'데이터 불완전',
+    cpTotal:'합계', cpIncomplete:'데이터 불완전',
     craft:'크래프팅 비용',
     edit:'편집', done:'완료',
     addItem:'+ 아이템 추가', deleteItem:'삭제', itemLabel:'이름', newItem:'새 아이템',
@@ -1708,7 +1753,25 @@ const STR = {
     tipAmadon:'아마돈에게 판매하는 가격. 게임 내 아마돈 메뉴에서 확인.',
     tipRate:'아이템 대 Ai 비율. 예: 105 = 1개 = 105 Ai. 플레이어에게 물어보기 / 마켓 채팅 확인.',
     tipQty:'가지고 있는 / 팔고 싶은 아이템 수.',
-    tipCost:'아이템의 크래프팅 비용 (순이익에서 자동 차감). 비용 없으면 0.'
+    tipCost:'아이템의 크래프팅 비용 (순이익에서 자동 차감). 비용 없으면 0.',
+    sumOverview:'개요', sumTitle:'요약', sumBtn:'요약',
+    sumShow:'표시', sumSort:'정렬',
+    sumAll:'전체', sumMarket:'마켓', sumIncomplete:'미완성',
+    sumOrder:'순서', sumDiff:'차액', sumBepDist:'BEP 거리', sumName:'이름',
+    sumItem:'아이템', sumBepAi:'BEP Ai', sumWinner:'승자',
+    sumBestTotal:'최고 합계', sumEmpty:'필터와 일치하는 아이템이 없습니다.',
+    sumClose:'요약 닫기',
+    // ── keys added for full i18n coverage ──
+    noscript:'이 계산기는 JavaScript가 필요합니다. 브라우저에서 JavaScript를 활성화해주세요.',
+    customItem:'커스텀', itemFallback:'아이템',
+    deletedPrefix:'삭제됨: {0}', restoredPrefix:'복원됨: {0}',
+    incompleteShort:'미완성', sharePlaceholder:'공유 URL…',
+    themeLight:'라이트 테마로 전환', themeDark:'다크 테마로 전환',
+    themeToggle:'테마 전환', toggleCard:'펼치기/접기',
+    resetColor:'색상 초기화', itemClusters:'아이템 클러스터',
+    tier_trash:'쓰레기', tier_common:'일반', tier_quality:'양질',
+    tier_rare:'희귀', tier_legendary:'전설',
+    tier_epic:'에픽', tier_mythic:'미틱'
   },
   'zh-CN':{
     title:'Amadon P2P Calc', sub:'卖给 Amadon 还是玩家？',
@@ -1724,7 +1787,7 @@ const STR = {
     tShare:'链接已复制！', tFail:'复制失败',
     tUndo:'撤销重置？', tUndoBtn:'撤销',
     aLang:'选择语言',
-    cpDiff:'差额', cpTotal:'总计', cpIncomplete:'数据不完整',
+    cpTotal:'总计', cpIncomplete:'数据不完整',
     craft:'制作费用',
     edit:'编辑', done:'完成',
     addItem:'+ 添加物品', deleteItem:'删除', itemLabel:'名称', newItem:'新物品',
@@ -1741,7 +1804,25 @@ const STR = {
     tipAmadon:'卖给 Amadon 的价格。在游戏内 Amadon 菜单查看。',
     tipRate:'物品与 Ai 的比率。如 105 = 1 个此物品 = 105 Ai。问玩家 / 看市场聊天。',
     tipQty:'你拥有 / 想卖的物品数量。',
-    tipCost:'物品的制作费用 (从净收益自动扣除)。无费用设为 0。'
+    tipCost:'物品的制作费用 (从净收益自动扣除)。无费用设为 0。',
+    sumOverview:'概览', sumTitle:'摘要', sumBtn:'摘要',
+    sumShow:'显示', sumSort:'排序',
+    sumAll:'全部', sumMarket:'市场', sumIncomplete:'未完成',
+    sumOrder:'顺序', sumDiff:'差额', sumBepDist:'BEP距离', sumName:'名称',
+    sumItem:'物品', sumBepAi:'BEP Ai', sumWinner:'赢家',
+    sumBestTotal:'最佳总计', sumEmpty:'没有符合筛选条件的物品。',
+    sumClose:'关闭摘要',
+    // ── keys added for full i18n coverage ──
+    noscript:'此计算器需要 JavaScript 才能运行。请在浏览器中启用 JavaScript。',
+    customItem:'自定义', itemFallback:'物品',
+    deletedPrefix:'已删除: {0}', restoredPrefix:'已恢复: {0}',
+    incompleteShort:'未完成', sharePlaceholder:'分享链接…',
+    themeLight:'切换到浅色主题', themeDark:'切换到深色主题',
+    themeToggle:'切换主题', toggleCard:'展开/折叠',
+    resetColor:'重置颜色', itemClusters:'物品分组',
+    tier_trash:'垃圾', tier_common:'普通', tier_quality:'优良',
+    tier_rare:'稀有', tier_legendary:'传奇',
+    tier_epic:'史诗', tier_mythic:'神话'
   },
   'zh-TW':{
     title:'Amadon P2P Calc', sub:'賣給 Amadon 還是玩家？',
@@ -1757,7 +1838,7 @@ const STR = {
     tShare:'連結已複製！', tFail:'複製失敗',
     tUndo:'復原重置？', tUndoBtn:'復原',
     aLang:'選擇語言',
-    cpDiff:'差額', cpTotal:'總計', cpIncomplete:'資料不完整',
+    cpTotal:'總計', cpIncomplete:'資料不完整',
     craft:'製作費用',
     edit:'編輯', done:'完成',
     addItem:'+ 新增物品', deleteItem:'刪除', itemLabel:'名稱', newItem:'新物品',
@@ -1774,7 +1855,25 @@ const STR = {
     tipAmadon:'賣給 Amadon 的價格。在遊戲內 Amadon 選單查看。',
     tipRate:'物品與 Ai 的比率。如 105 = 1 個此物品 = 105 Ai。問玩家 / 看市場聊天。',
     tipQty:'你擁有 / 想賣的物品數量。',
-    tipCost:'物品的製作費用 (從淨收益自動扣除)。無費用設為 0。'
+    tipCost:'物品的製作費用 (從淨收益自動扣除)。無費用設為 0。',
+    sumOverview:'概覽', sumTitle:'摘要', sumBtn:'摘要',
+    sumShow:'顯示', sumSort:'排序',
+    sumAll:'全部', sumMarket:'市場', sumIncomplete:'未完成',
+    sumOrder:'順序', sumDiff:'差額', sumBepDist:'BEP距離', sumName:'名稱',
+    sumItem:'物品', sumBepAi:'BEP Ai', sumWinner:'贏家',
+    sumBestTotal:'最佳總計', sumEmpty:'沒有符合篩選條件的物品。',
+    sumClose:'關閉摘要',
+    // ── keys added for full i18n coverage ──
+    noscript:'此計算機需要 JavaScript 才能運作。請在瀏覽器中啟用 JavaScript。',
+    customItem:'自訂', itemFallback:'物品',
+    deletedPrefix:'已刪除: {0}', restoredPrefix:'已還原: {0}',
+    incompleteShort:'未完成', sharePlaceholder:'分享連結…',
+    themeLight:'切換到淺色主題', themeDark:'切換到深色主題',
+    themeToggle:'切換主題', toggleCard:'展開/摺疊',
+    resetColor:'重置顏色', itemClusters:'物品分組',
+    tier_trash:'垃圾', tier_common:'普通', tier_quality:'優良',
+    tier_rare:'稀有', tier_legendary:'傳奇',
+    tier_epic:'史詩', tier_mythic:'神話'
   }
 };
 
@@ -1933,7 +2032,7 @@ function loadItemsFromURL(){
       } else {
         item = {
           id,
-          label: 'Custom',
+          label: s('customItem'),
           dA: 1000000, dR: 100, dS: 10,
           cost: 5000, maxA: null, hasStock: true,
           color: COMMON,  icon: 'material'  // default to common + material
@@ -2204,7 +2303,7 @@ function applyFilterAndSort(rows){
 
 function renderSummaryRow(r){
   const fmtOrDash = v => (v === null || v === undefined) ? '–' : formatCompact(v);
-  const diffText = r.diff === null ? 'incomplete' : (r.diff === 0 ? '0' : '+' + formatCompact(r.diff));
+  const diffText = r.diff === null ? s('incompleteShort') : (r.diff === 0 ? '0' : '+' + formatCompact(r.diff));
   // Winner badge
   let badge;
   if(r.state === 'amadon')      badge = '<span class="sum-badge b-am">Am</span>';
@@ -2239,13 +2338,13 @@ function updateSummary(){
   const stats = document.getElementById('sumStats');
   if(stats){
     stats.innerHTML = `
-      <span class="stat-am">Amadon <b>${winAm}</b></span>
+      <span class="stat-am">${s('aAm')} <b>${winAm}</b></span>
       <span class="sep">·</span>
-      <span class="stat-mk">Market <b>${winMk}</b></span>
+      <span class="stat-mk">${s('sumMarket')} <b>${winMk}</b></span>
       <span class="sep">·</span>
-      <span class="stat-bad">Incomplete <b>${incomplete}</b></span>
+      <span class="stat-bad">${s('sumIncomplete')} <b>${incomplete}</b></span>
       <span class="sep">·</span>
-      <span class="stat-best">Best total <b>${formatCompact(bestTotal)}</b></span>
+      <span class="stat-best">${s('sumBestTotal')} <b>${formatCompact(bestTotal)}</b></span>
     `;
   }
 
@@ -2253,7 +2352,7 @@ function updateSummary(){
   const list = document.getElementById('sumList');
   if(!list) return;
   if(rows.length === 0){
-    list.innerHTML = '<div class="sum-empty">No items match the current filter.</div>';
+    list.innerHTML = '<div class="sum-empty">' + s('sumEmpty') + '</div>';
   } else {
     list.innerHTML = rows.map(renderSummaryRow).join('');
   }
@@ -2369,9 +2468,10 @@ function renderClusters(){
                 const bg = p.hex === COMMON
                   ? 'repeating-linear-gradient(45deg, var(--text) 0 3px, var(--bg) 3px 6px)'
                   : p.hex;
-                return `<button class="swatch-opt ${currentColor === p.hex ? 'sel' : ''}" data-action="set-color" data-id="${c.id}" data-color="${p.hex}" role="option" aria-label="${p.id}" title="${p.id}"><span class="sw-dot" style="background:${bg}"></span></button>`;
+                const tierLabel = s('tier_' + p.id);
+                return `<button class="swatch-opt ${currentColor === p.hex ? 'sel' : ''}" data-action="set-color" data-id="${c.id}" data-color="${p.hex}" role="option" aria-label="${tierLabel}" title="${tierLabel}"><span class="sw-dot" style="background:${bg}"></span></button>`;
               }).join('')}
-              <button class="swatch-opt swatch-reset ${currentColor ? '' : 'hidden'}" data-action="set-color" data-id="${c.id}" data-color="" aria-label="Reset" title="Reset"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+              <button class="swatch-opt swatch-reset ${currentColor ? '' : 'hidden'}" data-action="set-color" data-id="${c.id}" data-color="" aria-label="${s('resetColor')}" title="${s('resetColor')}"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
             </div>
           </div>
           <button class="card-del" data-action="delete-item" data-id="${c.id}" aria-label="${s('deleteItem')}" title="${s('deleteItem')}">
@@ -2380,7 +2480,7 @@ function renderClusters(){
               <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
             </svg>
           </button>
-          <svg class="carrow carrow-toggle" aria-hidden="true" data-action="toggle-card" data-id="${c.id}" viewBox="0 0 24 24" fill="none" stroke-width="2.5" role="button" aria-label="Toggle"><polyline points="6 9 12 15 18 9"/></svg>
+          <svg class="carrow carrow-toggle" aria-hidden="true" data-action="toggle-card" data-id="${c.id}" viewBox="0 0 24 24" fill="none" stroke-width="2.5" role="button" aria-label="${s('toggleCard')}"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>`;
     } else {
@@ -2553,7 +2653,7 @@ function undoDelete(){
 
   renderClusters();
   calcAll();
-  toast('Restored: ' + item.label);
+  toast(s('restoredPrefix', item.label));
 }
 
 // Shared undo toast builder - used by delete + reset undo
@@ -2582,8 +2682,8 @@ function showUndoToastWithOptions(message, undoFn, extraTimers){
 }
 
 function showDeleteToast(itemId){
-  const label = CL_MAP.get(itemId)?.label || lastDeleted?.item?.label || 'Item';
-  showUndoToastWithOptions('Deleted: ' + label, undoDelete, () => {
+  const label = CL_MAP.get(itemId)?.label || lastDeleted?.item?.label || s('itemFallback');
+  showUndoToastWithOptions(s('deletedPrefix', label), undoDelete, () => {
     clearTimeout(deletedTimer);
     deletedTimer = setTimeout(() => { lastDeleted = null; }, 300000);
   });
@@ -2679,6 +2779,8 @@ function updateStatic(){
   document.getElementById('btnCopy').textContent =s('copyAll');
   document.getElementById('btnReset').textContent=s('reset');
   document.getElementById('btnShare').textContent=s('share');
+  document.getElementById('btnSummaryText').textContent = s('sumBtn');
+  document.getElementById('btnSummary').setAttribute('aria-label', s('sumBtn'));
   const btnText = document.getElementById('btnEditText');
   if(btnText) btnText.textContent = editMode ? s('done') : s('edit');
   document.getElementById('langBtn').setAttribute('aria-label',s('aLang'));
@@ -2696,8 +2798,46 @@ function updateStatic(){
   document.getElementById('tutQty').textContent = s('tutQty');
   document.getElementById('tutP3').textContent = s('tutP3');
   document.getElementById('tutP4').textContent = s('tutP4');
-  // Ai price tooltip
   document.getElementById('tipAi').textContent = s('tipAi');
+  // Summary section text
+  document.getElementById('sumOverview').textContent = s('sumOverview');
+  document.getElementById('sumTitle').textContent = s('sumTitle');
+  document.getElementById('summaryClose').setAttribute('aria-label', s('sumClose'));
+  document.getElementById('summary').setAttribute('aria-label', s('sumTitle'));
+  document.getElementById('sumShowLbl').textContent = s('sumShow');
+  document.getElementById('sumFltAll').textContent = s('sumAll');
+  document.getElementById('sumFltAm').textContent = s('aAm');
+  document.getElementById('sumFltMk').textContent = s('sumMarket');
+  document.getElementById('sumFltInc').textContent = s('sumIncomplete');
+  document.getElementById('sumSortLbl').textContent = s('sumSort');
+  document.getElementById('sumSrtOrder').textContent = s('sumOrder');
+  document.getElementById('sumSrtDiff').textContent = s('sumDiff');
+  document.getElementById('sumSrtBep').textContent = s('sumBepDist');
+  document.getElementById('sumSrtName').textContent = s('sumName');
+  document.getElementById('shItem').textContent = s('sumItem');
+  document.getElementById('shQty').textContent = s('qty');
+  document.getElementById('shAm').textContent = s('aAm');
+  document.getElementById('shMk').textContent = s('sumMarket');
+  document.getElementById('shBep').textContent = s('sumBepAi');
+  document.getElementById('shDiff').textContent = s('sumDiff');
+  document.getElementById('shWinner').textContent = s('sumWinner');
+  // ── aria-labels + placeholder for elements previously hardcoded ──
+  const setAriaById=(id,key)=>{ const el=document.getElementById(id); if(el) el.setAttribute('aria-label', s(key)); };
+  const setAriaByAction=(action,key)=>{ const el=document.querySelector(`[data-action="${action}"]`); if(el) el.setAttribute('aria-label', s(key)); };
+  // Theme button: aria-label reflects what clicking will switch TO
+  const themeBtn=document.getElementById('themeToggle');
+  if(themeBtn){
+    const curTheme=document.documentElement.getAttribute('data-theme');
+    themeBtn.setAttribute('aria-label', curTheme==='dark' ? s('themeLight') : s('themeDark'));
+  }
+  setAriaById('btnEdit', editMode ? 'done' : 'edit');
+  setAriaByAction('copy-rec','copyAll');
+  setAriaByAction('do-reset','reset');
+  setAriaByAction('copy-url','share');
+  const grid=document.getElementById('grid');
+  if(grid) grid.setAttribute('aria-label', s('itemClusters'));
+  const shareInput=document.getElementById('shareUrl');
+  if(shareInput) shareInput.setAttribute('placeholder', s('sharePlaceholder'));
 }
 
 // ── Tutorial ─────────────────────────────────
@@ -3034,7 +3174,7 @@ function undoReset(){
     if(sEl && inp.s !== undefined) sEl.value = inp.s;
   });
   calcAll();
-  toast('Restored: ' + s('tReset'));  // generic "restored" toast
+  toast(s('restoredPrefix', s('tReset')));  // generic "restored" toast
 }
 
 function showUndoToast(){
@@ -3059,7 +3199,7 @@ function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
   lsSet(THEME_KEY, t);
   const btn = document.getElementById('themeToggle');
-  if(btn) btn.setAttribute('aria-label', t==='dark' ? 'Switch to light theme' : 'Switch to dark theme');
+  if(btn) btn.setAttribute('aria-label', t==='dark' ? s('themeLight') : s('themeDark'));
 }
 
 // ── Language dropdown ────────────────────────
