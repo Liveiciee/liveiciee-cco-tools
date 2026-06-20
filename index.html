@@ -129,7 +129,7 @@ button:active,[role="switch"]:active,.btn:active,.lang-btn:active,.lang-opt:acti
   border-radius:12px;
   box-shadow:var(--shadow-lg), var(--shadow-inset);
   overflow:visible;
-  transition:background-color .4s var(--ease-out),border-color .4s var(--ease-out),box-shadow .4s var(--ease-out);
+  transition:background-color .4s var(--ease-out),border-color .4s var(--ease-out);
 }
 
 .hdr{
@@ -277,7 +277,7 @@ button:active,[role="switch"]:active,.btn:active,.lang-btn:active,.lang-opt:acti
   border:1px solid var(--border);border-radius:8px;
   background:var(--input-bg);color:var(--text);outline:none;
   font-variant-numeric:tabular-nums;
-  transition:border-color .2s var(--ease-out),background-color .25s var(--ease-out),box-shadow .2s var(--ease-out);
+  transition:border-color .2s var(--ease-out),background-color .25s var(--ease-out);
 }
 .ai-grp input:hover{border-color:var(--accent-soft)}
 .ai-grp input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
@@ -291,7 +291,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   cursor:pointer;display:inline-flex;align-items:center;gap:.32rem;
   color:var(--accent);background:var(--btn-bg);white-space:nowrap;
   letter-spacing:0;
-  transition:background .2s var(--ease-out),border-color .2s var(--ease-out),color .2s var(--ease-out),transform .15s var(--ease-out),box-shadow .2s var(--ease-out);
+  transition:background .2s var(--ease-out),border-color .2s var(--ease-out),color .2s var(--ease-out),transform .15s var(--ease-out);
 }
 .btn:hover{background:var(--btn-hover);border-color:var(--accent);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
 .btn:active{transform:translateY(0)}
@@ -355,7 +355,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   border:1px solid var(--border);border-radius:12px;
   overflow:hidden;background:var(--card-bg);
   box-shadow:var(--shadow-sm);
-  transition:background-color .3s var(--ease-out),border-color .3s var(--ease-out),box-shadow .4s var(--ease-out),transform .4s var(--ease-out),z-index 0s;
+  transition:background-color .3s var(--ease-out),border-color .3s var(--ease-out),transform .4s var(--ease-out),z-index 0s;
 }
 
 .ccard:has(.swatch-dd.open),
@@ -397,7 +397,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   min-width:0;
   flex:1;
   max-width:160px;
-  transition:border-color .2s var(--ease-out),box-shadow .2s var(--ease-out);
+  transition:border-color .2s var(--ease-out);
 }
 .cname-input:hover{border-color:var(--accent-soft)}
 .cname-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--ring)}
@@ -574,7 +574,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   border:1px solid var(--border);border-radius:8px;
   background:var(--input-bg);color:var(--text);
   outline:none;font-variant-numeric:tabular-nums;
-  transition:border-color .2s var(--ease-out),background-color .25s var(--ease-out),box-shadow .2s var(--ease-out);
+  transition:border-color .2s var(--ease-out),background-color .25s var(--ease-out);
 }
 .edit-fields input:hover{border-color:var(--accent-soft)}
 .edit-fields input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
@@ -632,7 +632,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   border:1px solid var(--border);border-radius:8px;
   background:var(--input-bg);color:var(--text);
   outline:none;width:100%;font-variant-numeric:tabular-nums;letter-spacing:-0.01em;
-  transition:border-color .2s var(--ease-out),background-color .25s var(--ease-out),box-shadow .2s var(--ease-out);
+  transition:border-color .2s var(--ease-out),background-color .25s var(--ease-out);
 }
 .igrid input:hover{border-color:var(--accent-soft)}
 .igrid input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
@@ -652,7 +652,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   border:1px solid var(--border);border-radius:8px;
   background:var(--input-bg);color:var(--text);
   outline:none;font-variant-numeric:tabular-nums;
-  transition:border-color .2s var(--ease-out),background-color .25s var(--ease-out),box-shadow .2s var(--ease-out);
+  transition:border-color .2s var(--ease-out),background-color .25s var(--ease-out);
 }
 .srow input:hover{border-color:var(--accent-soft)}
 .srow input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--ring)}
@@ -1225,6 +1225,32 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{transition:none!important;animation:none!important}
+}
+
+::view-transition-old(root),
+::view-transition-new(root){
+  animation:none;
+  mix-blend-mode:normal;
+}
+::view-transition-old(root){
+  z-index:0;
+}
+::view-transition-new(root){
+  z-index:1;
+  will-change:clip-path;
+  isolation:isolate;
+}
+
+[data-theme="light"] .cname,
+[data-theme="light"] .chex,
+[data-theme="light"] .carrow,
+[data-theme="light"] .icon-btn,
+[data-theme="light"] .cname-input,
+[data-theme="light"] .swatch-btn .swatch-current{
+  color:color-mix(in srgb, var(--card-accent, var(--accent)) 60%, var(--text));
+}
+[data-theme="light"] .chex svg{
+  fill:color-mix(in srgb, var(--card-accent, var(--accent)) 60%, var(--text));
 }
 
 @media(hover:none) and (pointer:coarse){
@@ -2527,6 +2553,8 @@ function renderClusters(){
     `;
     grid.appendChild(el);
 
+    // NOTE: input listeners for a_/r_/s_ are delegated at #grid level in bindEvents()
+
   });
   const existingAdd = document.getElementById('addBtn');
   if(existingAdd) existingAdd.remove();
@@ -2557,22 +2585,38 @@ let preEditCardOpen = null;
 
 function setEditMode(on){
   editMode = on;
+  const targetOpen = {};
   if(on){
-
     preEditCardOpen = { ...cardOpen };
-    CL.forEach(c => { cardOpen[c.id] = true; });
+    CL.forEach(c => { targetOpen[c.id] = true; });
   } else if(preEditCardOpen){
-
     Object.keys(cardOpen).forEach(k => {
-      if(preEditCardOpen[k] !== undefined) cardOpen[k] = preEditCardOpen[k];
+      targetOpen[k] = preEditCardOpen[k] !== undefined ? preEditCardOpen[k] : cardOpen[k];
     });
     preEditCardOpen = null;
+  } else {
+    CL.forEach(c => { targetOpen[c.id] = cardOpen[c.id]; });
   }
   const btnText = document.getElementById('btnEditText');
   const btn = document.getElementById('btnEdit');
   if(btnText) btnText.textContent = on ? s('done') : s('edit');
   if(btn) btn.classList.toggle('on', on);
   renderClusters();
+  void document.getElementById('grid').offsetHeight;
+  requestAnimationFrame(() => {
+    Object.keys(targetOpen).forEach(k => {
+      const target = !!targetOpen[k];
+      if(!!cardOpen[k] === target) return;
+      cardOpen[k] = target;
+      const el = document.getElementById(`cc_${k}`);
+      if(el){
+        el.classList.toggle('open', target);
+        el.querySelectorAll('[data-action="toggle-card"]').forEach(ctrl => {
+          ctrl.setAttribute('aria-expanded', String(target));
+        });
+      }
+    });
+  });
   calcAll();
 }
 
@@ -3150,10 +3194,40 @@ function applyTheme(t){
   lsSet(THEME_KEY, t);
   const btn = document.getElementById('themeToggle');
   if(btn) btn.setAttribute('aria-label', t==='dark' ? s('themeLight') : s('themeDark'));
-
   const tc = document.querySelector('meta[name="theme-color"]:not([media])') ||
              document.querySelector('meta[name="theme-color"]');
   if(tc) tc.setAttribute('content', t === 'dark' ? '#1a1813' : '#fbfaf6');
+}
+
+function applyThemeWithReveal(t, e){
+  const supportsVT = typeof document.startViewTransition === 'function';
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!supportsVT || reducedMotion){
+    applyTheme(t);
+    return;
+  }
+  const x = e && typeof e.clientX === 'number' ? e.clientX : window.innerWidth - 50;
+  const y = e && typeof e.clientY === 'number' ? e.clientY : 50;
+  const endRadius = Math.hypot(
+    Math.max(x, window.innerWidth - x),
+    Math.max(y, window.innerHeight - y)
+  );
+  const transition = document.startViewTransition(() => applyTheme(t));
+  transition.ready.then(() => {
+    document.documentElement.animate(
+      {
+        clipPath: [
+          `circle(0px at ${x}px ${y}px)`,
+          `circle(${endRadius}px at ${x}px ${y}px)`
+        ]
+      },
+      {
+        duration: 600,
+        easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+        pseudoElement: '::view-transition-new(root)'
+      }
+    );
+  }).catch(() => {});
 }
 
 const LANG_NAMES = {
@@ -3223,9 +3297,9 @@ function initStateFromURL(){
 
 function bindEvents(){
 
-  document.getElementById('themeToggle').addEventListener('click', () => {
+  document.getElementById('themeToggle').addEventListener('click', (e) => {
     const cur = document.documentElement.getAttribute('data-theme');
-    applyTheme(cur === 'dark' ? 'light' : 'dark');
+    applyThemeWithReveal(cur === 'dark' ? 'light' : 'dark', e);
   });
 
   document.getElementById('craftToggle').addEventListener('click', () => {
