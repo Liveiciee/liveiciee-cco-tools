@@ -7,7 +7,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data:;">
 <title>Amadon P2P Calc</title>
 <style>
-/* ── Variables · Light (Editorial paper) ───── */
+/* ── Variables · Light ────────────────────── */
 :root,
 [data-theme="light"]{
   --bg:            #fbfaf6;
@@ -42,12 +42,11 @@
   --opt-sel-bg:    #f3f0e8;
   --invalid-bg:    transparent;
   --invalid-bd:    #b91c1c;
-  --serif:         'Iowan Old Style','Palatino Linotype','Book Antiqua','Source Serif Pro',Georgia,'Noto Serif',serif;
   --mono:          ui-monospace,'SF Mono','JetBrains Mono','IBM Plex Mono',Menlo,Consolas,monospace;
   --sans:          ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI','Helvetica Neue','Noto Sans JP','Noto Sans KR','Noto Sans SC',sans-serif;
 }
 
-/* ── Variables · Dark (Editorial inverted) ──── */
+/* ── Variables · Dark ─────────────────────── */
 [data-theme="dark"]{
   --bg:            #1a1813;
   --surface:       #211e18;
@@ -111,21 +110,6 @@ body{
   -webkit-tap-highlight-color:transparent;
   position:relative;
 }
-/* Paper grain texture — fixed overlay, GPU-safe */
-body::before{
-  content:'';
-  position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.04;
-  background-image:url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.3  0 0 0 0 0.2  0 0 0 0 0.1  0 0 0 0.7 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
-  background-size:200px 200px;
-  mix-blend-mode:multiply;
-}
-[data-theme="dark"] body::before{opacity:.06;mix-blend-mode:screen}
-/* Subtle paper edge vignette */
-body::after{
-  content:'';position:fixed;inset:0;z-index:1;pointer-events:none;
-  background:radial-gradient(ellipse at center, transparent 50%, rgba(60,45,20,.04) 100%);
-}
-[data-theme="dark"] body::after{background:radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,.4) 100%)}
 .wrap,.toast{position:relative;z-index:2}
 :focus{outline:none}
 :focus-visible{outline:2px solid var(--ring);outline-offset:2px}
@@ -138,7 +122,7 @@ button:active,[role="switch"]:active,.btn:active,.lang-btn:active,.lang-opt:acti
   margin:0 auto;
   background:var(--surface);
   border:1px solid var(--border);
-  border-radius:18px;
+  border-radius:12px;
   box-shadow:var(--shadow-lg), var(--shadow-inset);
   overflow:visible;
   transition:background-color .4s var(--ease-out),border-color .4s var(--ease-out),box-shadow .4s var(--ease-out);
@@ -152,18 +136,16 @@ button:active,[role="switch"]:active,.btn:active,.lang-btn:active,.lang-opt:acti
   padding:.95rem 1.25rem;
   background:var(--head-bg);
   border-bottom:1px solid var(--border);
-  border-radius:18px 18px 0 0;
+  border-radius:12px 12px 0 0;
   gap:.6rem;
   transition:background-color .4s var(--ease-out),border-color .4s var(--ease-out);
 }
 .hdr-l{display:flex;align-items:center;gap:.7rem}
 .hdr-t{line-height:1.2}
-/* Editorial title: serif italic, magazine masthead style */
 .hdr-title{
-  font-family:var(--serif);
-  font-size:1.15rem;
-  font-weight:500;
-  font-style:italic;
+  font-family:var(--sans);
+  font-size:1.1rem;
+  font-weight:600;
   color:var(--accent);
   letter-spacing:-0.015em;
   transition:color .4s var(--ease-out);
@@ -179,7 +161,7 @@ button:active,[role="switch"]:active,.btn:active,.lang-btn:active,.lang-opt:acti
   display:flex;align-items:center;justify-content:center;
   background:var(--card-bg);
   border:1px solid var(--border);
-  border-radius:10px;
+  border-radius:8px;
   flex-shrink:0;
   box-shadow:var(--shadow-inset);
   transition:background-color .35s var(--ease-out),border-color .35s var(--ease-out);
@@ -373,76 +355,30 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 @media(min-width:600px){.grid{grid-template-columns:1fr 1fr}}
 
 /* ── Cluster card ───────────────────────────── */
-/* Editorial card with spotlight border (cursor-following glow on hover) */
+/* isolation:isolate creates a stacking context so dropdown menus (z-index:50)
+   inside .chead can overlay .cbody-wrap siblings within the same card,
+   and :has() can lift the whole card above sibling cards when a menu opens. */
 .ccard{
   position:relative;
-  /* isolation:isolate creates a stacking context WITHOUT z-index, so:
-     - ::before/::after (z-index:-1) stay contained behind content but above bg
-     - .chead's swatch-menu / icon-menu (z-index:50) escape .chead's stacking context
-       and properly overlay sibling .cbody-wrap content
-     - When a menu opens, :has() lifts the whole card via z-index:100 to overlay
-       sibling cards too */
   isolation:isolate;
-  border:1px solid var(--border);border-radius:14px;
+  border:1px solid var(--border);border-radius:12px;
   overflow:hidden;background:var(--card-bg);
   box-shadow:var(--shadow-sm);
-  /* Spotlight border vars (set by JS on mousemove) */
-  --mx:50%;
-  --my:50%;
-  --spot-opacity:0;
   transition:background-color .3s var(--ease-out),border-color .3s var(--ease-out),box-shadow .4s var(--ease-out),transform .4s var(--ease-out),z-index 0s;
 }
-/* Lift the whole card above siblings when one of its dropdown menus is open
-   OR when a tooltip is shown inside it. Without this, sibling cards (later
-   in DOM, painted on top) would overlap the menu / tooltip.
-   :has() is supported in all modern browsers (Chrome 105+, FF 121+, Safari 15.4+).
-   JS fallback in updateCardStacking() covers older browsers and edge cases. */
+/* Lift card above siblings when a dropdown menu or tooltip is open inside it.
+   :has() is supported in Chrome 105+, FF 121+, Safari 15.4+. */
 .ccard:has(.swatch-dd.open),
 .ccard:has(.icon-dd.open),
 .ccard:has(.lang-dd.open),
-.ccard:has(.tip-wrap:hover),
 .ccard:has(.tip-wrap.show-tip){
   z-index:100;
 }
-/* Defensive: when a menu is open inside a card, lift .chead above .cbody-wrap
-   within the same card. Normally swatch-menu (z-index:50) escapes .chead and
-   sits at the card stacking context, above .cbody-wrap (z-index auto). But some
-   browsers paint z-index:auto siblings differently — this explicit rule removes
-   ambiguity. The .is-menu-open class is set/cleared by updateCardStacking(). */
-.ccard.is-menu-open > .chead{z-index:10}
-.ccard.is-menu-open > .cbody-wrap{z-index:1}
-/* Spotlight border: radial highlight at cursor position, fades when not hovering.
-   z-index:-1 puts it behind content (which is at auto z-index = 0) but above .ccard bg.
-   Requires .ccard to be a stacking context (isolation:isolate above). */
-.ccard::before{
-  content:'';
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  border-radius:inherit;
-  opacity:var(--spot-opacity);
-  background:radial-gradient(circle 180px at var(--mx) var(--my), color-mix(in srgb, var(--accent) 14%, transparent), transparent 60%);
-  transition:opacity .35s var(--ease-out);
-  z-index:-1;
-}
-/* Hairline ring that lights up on hover (more subtle than glow) */
-.ccard::after{
-  content:'';
-  position:absolute;
-  inset:0;
-  pointer-events:none;
-  border-radius:inherit;
-  box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--accent) calc(var(--spot-opacity) * 25%), transparent);
-  transition:box-shadow .35s var(--ease-out);
-  z-index:-1;
-}
 .ccard:hover{box-shadow:var(--shadow-md);border-color:var(--accent-soft)}
-.ccard:hover::before,.ccard:hover::after{--spot-opacity:1}
 .ccard.open{box-shadow:var(--shadow-md)}
-/* Direct children get position:relative (needed for any internal positioning)
-   but NO z-index — so they do NOT create stacking contexts of their own.
-   This lets .swatch-menu / .icon-menu (z-index:50) escape .chead and overlay
-   .cbody-wrap content correctly. */
+/* Direct children get position:relative for internal positioning,
+   but NO z-index so they don't create stacking contexts that would trap
+   the dropdown menus inside .chead. */
 .ccard > *{position:relative}
 .chead{
   display:flex;align-items:center;justify-content:space-between;
@@ -455,7 +391,6 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .chead:hover{background:var(--acc-hover)}
 .ccard.editing .chead{cursor:default}
 .ccard.editing .chead:hover{background:var(--acc-bg)}
-/* Editing card gets a subtle accent left-border to signal "editable now" */
 .ccard.editing{border-left:2px solid var(--accent-soft)}
 .ccard.editing.open{border-left:2px solid var(--accent)}
 .chead.chead-edit{padding:.45rem .6rem}
@@ -468,7 +403,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   color:var(--card-accent,var(--accent));
   background:var(--input-bg);
   border:1px solid var(--border);
-  border-radius:5px;
+  border-radius:8px;
   padding:.2rem .36rem;
   outline:none;
   min-width:0;
@@ -478,11 +413,11 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 }
 .cname-input:hover{border-color:var(--accent-soft)}
 .cname-input:focus{border-color:var(--accent);box-shadow:0 0 0 2px var(--ring)}
-/* Delete button — quieter editorial red, only becomes loud on hover */
+/* Delete button - quiet by default, red on hover */
 .card-del{
   width:26px;height:26px;
   display:inline-flex;align-items:center;justify-content:center;
-  border:1px solid var(--border);border-radius:6px;
+  border:1px solid var(--border);border-radius:8px;
   background:var(--btn-bg);cursor:pointer;
   color:var(--muted);
   flex-shrink:0;
@@ -493,14 +428,14 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .card-del svg{width:13px;height:13px;stroke:currentColor}
 [data-theme="dark"] .card-del:hover{background:color-mix(in srgb, #ef4444 14%, var(--btn-bg));border-color:#ef4444;color:#ef4444}
 
-/* Add item button — editorial dashed slot, calmer than v3 */
+/* Add item button - dashed slot that becomes solid on hover */
 .add-item-btn{
   display:flex;align-items:center;justify-content:center;gap:.5rem;
   width:100%;
   margin-top:.75rem;
   padding:.8rem;
   border:1px dashed var(--border);
-  border-radius:14px;
+  border-radius:12px;
   background:transparent;
   color:var(--muted);
   font-family:inherit;font-size:.72rem;font-weight:600;
@@ -510,10 +445,9 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 }
 .add-item-btn::before{
   content:'+';
-  font-family:var(--serif);
-  font-size:1.1rem;
-  font-weight:500;
-  font-style:italic;
+  font-family:var(--sans);
+  font-size:1rem;
+  font-weight:600;
   line-height:1;
   color:var(--accent-soft);
   transition:color .25s var(--ease-out),transform .35s var(--ease-spring);
@@ -527,14 +461,14 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .add-item-btn:hover::before{color:var(--accent);transform:rotate(90deg)}
 .add-item-btn:active{transform:translateY(1px)}
 
-/* Chead actions — looser gap, more breathing room in edit mode */
+/* Chead actions - looser gap, more breathing room in edit mode */
 .chead-actions{display:inline-flex;align-items:center;gap:.5rem;flex-shrink:0}
-/* Color swatch picker — slightly bigger tap target, editorial menu */
+/* Color swatch picker */
 .swatch-dd{position:relative}
 .swatch-btn{
   width:26px;height:26px;
   display:inline-flex;align-items:center;justify-content:center;
-  border:1px solid var(--border);border-radius:6px;
+  border:1px solid var(--border);border-radius:8px;
   background:var(--btn-bg);cursor:pointer;
   padding:0;position:relative;
   flex-shrink:0;
@@ -556,7 +490,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   display:flex;gap:.3rem;align-items:center;
   background:var(--menu-bg);
   border:1px solid var(--border);
-  border-radius:10px;
+  border-radius:8px;
   box-shadow:var(--shadow-md);
   padding:.4rem;
   z-index:50;
@@ -573,7 +507,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .swatch-opt{
   width:24px;height:24px;
   display:inline-flex;align-items:center;justify-content:center;
-  border:1.5px solid transparent;border-radius:6px;
+  border:1.5px solid transparent;border-radius:8px;
   background:transparent;cursor:pointer;
   padding:0;
   transition:border-color .15s var(--ease-out),transform .15s var(--ease-spring);
@@ -602,12 +536,12 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .swatch-reset svg{width:13px;height:13px;stroke:currentColor}
 .swatch-reset.hidden{display:none}
 
-/* Icon picker — editorial grid menu, bigger tap target */
+/* Icon picker */
 .icon-dd{position:relative}
 .icon-btn{
   width:26px;height:26px;
   display:inline-flex;align-items:center;justify-content:center;
-  border:1px solid var(--border);border-radius:6px;
+  border:1px solid var(--border);border-radius:8px;
   background:var(--btn-bg);cursor:pointer;
   padding:0;color:var(--card-accent,var(--accent));
   flex-shrink:0;position:relative;
@@ -623,7 +557,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   display:grid;grid-template-columns:repeat(4,1fr);gap:.25rem;
   background:var(--menu-bg);
   border:1px solid var(--border);
-  border-radius:10px;
+  border-radius:8px;
   box-shadow:var(--shadow-md);
   padding:.36rem;
   z-index:50;
@@ -635,7 +569,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .icon-opt{
   width:26px;height:26px;
   display:inline-flex;align-items:center;justify-content:center;
-  border:1.5px solid transparent;border-radius:6px;
+  border:1.5px solid transparent;border-radius:8px;
   background:transparent;cursor:pointer;padding:0;
   color:var(--card-accent,var(--accent));
   transition:border-color .15s var(--ease-out),transform .15s var(--ease-spring),background .15s var(--ease-out);
@@ -643,7 +577,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .icon-opt:hover{transform:translateY(-1px) scale(1.05);background:var(--opt-hover)}
 .icon-opt.sel{border-color:var(--accent);background:var(--opt-sel-bg)}
 .icon-opt svg{width:16px;height:16px;fill:currentColor}
-/* Edit-fields row (crafting cost) — label + input + spacer, same rhythm as igrid */
+/* Edit-fields row (crafting cost) - label + input + spacer, same rhythm as igrid */
 .edit-fields{margin-bottom:.5rem}
 .edit-fields label{
   font-size:.62rem;font-weight:600;
@@ -654,7 +588,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   width:88px;
   font-family:var(--mono);font-size:.76rem;
   padding:.34rem .45rem;
-  border:1px solid var(--border);border-radius:6px;
+  border:1px solid var(--border);border-radius:8px;
   background:var(--input-bg);color:var(--text);
   outline:none;font-variant-numeric:tabular-nums;
   transition:border-color .2s var(--ease-out),background-color .25s var(--ease-out),box-shadow .2s var(--ease-out);
@@ -683,14 +617,14 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .carrow-toggle{
   cursor:pointer;
   padding:2px;
-  border-radius:5px;
+  border-radius:8px;
   transition:transform .35s var(--ease-spring),stroke .2s,background .15s;
 }
 .carrow-toggle:hover{background:var(--acc-hover)}
 .carrow-toggle:active{transform:scale(.92)}
 /* Smooth accordion using grid-template-rows 0fr → 1fr technique.
    CRITICAL: must use minmax(0, 0fr), NOT plain 0fr.
-   Plain 0fr = minmax(auto, 0fr) — auto min = item's min-content size,
+   Plain 0fr = minmax(auto, 0fr) - auto min = item's min-content size,
    which INCLUDES padding. With .cbody padding 0.7rem+0.82rem ≈ 24.3px,
    the closed track would actually be 24.3px tall, not 0.
    minmax(0, 0fr) explicitly sets min=0 so the track fully collapses. */
@@ -749,10 +683,10 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .stk-sum{font-size:.61rem;color:var(--muted);margin-left:auto;transition:color .2s}
 
 /* ── Result cards ───────────────────────────── */
-/* Editorial result: serif italic for the number itself (display), sans for label */
+/* Result number - mono for scanability */
 .rrow{display:grid;grid-template-columns:1fr 1fr;gap:.45rem;margin-bottom:.5rem}
 .rcard{
-  border:1px solid var(--border-soft);border-radius:10px;
+  border:1px solid var(--border-soft);border-radius:8px;
   padding:.55rem .7rem;text-align:left;
   transition:background-color .3s var(--ease-out),border-color .3s var(--ease-out),transform .25s var(--ease-out);
   position:relative;
@@ -762,17 +696,15 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .rcard.market.is-winner{border-left-color:var(--rec-mk-bg);background:color-mix(in srgb, var(--rec-mk-bg) 10%, var(--market-card))}
 .rcard.amadon.is-winner{border-left-color:var(--accent);background:color-mix(in srgb, var(--accent) 8%, var(--amadon-card))}
 .rlbl{font-size:.56rem;font-weight:600;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.22rem;transition:color .3s var(--ease-out)}
-/* THE NUMBER: italic serif display, like a magazine pull-quote figure */
 .rval{
-  font-family:var(--serif);
-  font-size:1.18rem;
-  font-weight:500;
-  font-style:italic;
+  font-family:var(--mono);
+  font-size:1.05rem;
+  font-weight:600;
   color:var(--accent);
-  letter-spacing:-0.015em;
+  letter-spacing:-0.01em;
   font-variant-numeric:tabular-nums;
   transition:color .3s var(--ease-out);
-  line-height:1.05;
+  line-height:1.1;
   display:block;
 }
 .rsub{font-size:.54rem;color:var(--muted);margin-top:.16rem;letter-spacing:0;transition:color .3s var(--ease-out)}
@@ -780,7 +712,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 /* ── BEP bar ────────────────────────────────── */
 .bep-bar{
   background:var(--bep-bg);
-  border:1px solid var(--border-soft);border-radius:10px;
+  border:1px solid var(--border-soft);border-radius:8px;
   padding:.5rem .75rem;margin-bottom:.5rem;
   display:flex;align-items:baseline;justify-content:space-between;
   gap:.45rem;flex-wrap:wrap;
@@ -788,10 +720,9 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 }
 .bep-main{font-size:.64rem;font-weight:500;color:var(--muted);white-space:nowrap;letter-spacing:0;transition:color .3s var(--ease-out)}
 .bep-main .bval{
-  font-family:var(--serif);
+  font-family:var(--mono);
   color:var(--accent);
-  font-weight:500;
-  font-style:italic;
+  font-weight:600;
   font-size:.78rem;
   font-variant-numeric:tabular-nums;
   transition:color .3s var(--ease-out);
@@ -799,8 +730,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 }
 
 /* ── Recommendation ─────────────────────────── */
-/* HERO OUTPUT — most prominent element on the card.
-   Editorial: serif italic for the action label, generous padding, breathing room. */
+/* HERO OUTPUT - most prominent element on the card. */
 .rec{
   border-radius:12px;
   padding:.85rem 1rem;
@@ -821,7 +751,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   background:transparent;border:none;cursor:pointer;
   color:var(--rec-fg);opacity:.45;
   display:inline-flex;align-items:center;justify-content:center;
-  padding:.24rem;border-radius:6px;
+  padding:.24rem;border-radius:8px;
   transition:opacity .25s var(--ease-out),background .25s var(--ease-out);
 }
 .rec.r-amadon .rec-copy{color:var(--bg)}
@@ -832,16 +762,14 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .rec-text{line-height:1.35;min-width:0;flex:1}
 .rec-hdg{font-size:.5rem;text-transform:uppercase;letter-spacing:.16em;color:var(--rec-fg);opacity:.55;font-weight:600}
 .rec.r-amadon .rec-hdg{color:var(--bg);opacity:.55}
-/* THE WINNER LABEL — serif italic display, like a magazine verdict */
 .rec-act{
-  font-family:var(--serif);
-  font-size:1.15rem;
-  font-weight:500;
-  font-style:italic;
+  font-family:var(--sans);
+  font-size:1.05rem;
+  font-weight:600;
   color:var(--rec-fg);
-  letter-spacing:-0.015em;
+  letter-spacing:-0.01em;
   margin-top:.08rem;
-  line-height:1.1;
+  line-height:1.15;
   display:block;
 }
 .rec.r-amadon .rec-act{color:var(--bg)}
@@ -871,7 +799,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .toast{
   position:fixed;bottom:1.6rem;left:50%;transform:translateX(-50%) translateY(8px);
   background:var(--accent);color:var(--toast-fg);
-  padding:.55rem 1.1rem;border-radius:10px;
+  padding:.55rem 1.1rem;border-radius:8px;
   font-size:.7rem;font-weight:600;letter-spacing:-0.005em;
   z-index:99;opacity:0;
   transition:opacity .25s var(--ease-out),transform .35s var(--ease-spring),background-color .35s var(--ease-out),color .35s var(--ease-out);
@@ -888,7 +816,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   font-family:inherit;
   font-size:.66rem;font-weight:700;
   padding:.24rem .55rem;
-  border-radius:5px;
+  border-radius:8px;
   cursor:pointer;
   white-space:nowrap;
   transition:background .15s,color .15s;
@@ -986,7 +914,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   background:var(--card-bg);
   border:1px solid var(--border);
   border-top:1px dashed var(--accent-soft);
-  border-radius:18px;
+  border-radius:12px;
   box-shadow:var(--shadow-md), var(--shadow-inset);
   overflow:hidden;
   display:grid;
@@ -1028,7 +956,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   line-height:1.1;
 }
 .summary-head-r{display:flex;align-items:center;gap:.5rem}
-/* Compact stat strip — total + breakdown in 1 line */
+/* Compact stat strip - total + breakdown in 1 line */
 .sum-stats{
   font-family:var(--mono);
   font-size:.62rem;
@@ -1047,7 +975,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .summary-close{
   width:26px;height:26px;
   display:inline-flex;align-items:center;justify-content:center;
-  background:transparent;border:1px solid transparent;border-radius:6px;
+  background:transparent;border:1px solid transparent;border-radius:8px;
   color:var(--muted);cursor:pointer;
   transition:background .2s var(--ease-out),color .2s var(--ease-out),border-color .2s var(--ease-out);
 }
@@ -1072,7 +1000,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .sum-chip{
   font-family:inherit;font-size:.6rem;font-weight:600;
   padding:.22rem .5rem;
-  border:1px solid var(--border);border-radius:5px;
+  border:1px solid var(--border);border-radius:8px;
   background:var(--btn-bg);color:var(--muted);
   cursor:pointer;
   letter-spacing:.04em;
@@ -1087,7 +1015,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .sum-chip.asc svg{transform:rotate(180deg)}
 .sum-spacer{flex:1}
 
-/* List body — scrollable */
+/* List body - scrollable */
 .sum-list-wrap{
   flex:1;
   overflow-y:auto;
@@ -1103,10 +1031,10 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   scrollbar-color:var(--accent-soft) transparent;
 }
 .sum-list-wrap::-webkit-scrollbar{width:6px}
-.sum-list-wrap::-webkit-scrollbar-thumb{background:var(--accent-soft);border-radius:3px}
+.sum-list-wrap::-webkit-scrollbar-thumb{background:var(--accent-soft);border-radius:4px}
 .sum-list-wrap::-webkit-scrollbar-track{background:transparent}
 
-/* Column header — sticky inside scroll container */
+/* Column header - sticky inside scroll container */
 .sum-list-head{
   display:grid;
   grid-template-columns:1.4fr .5fr 1fr 1fr 1fr 1.1fr .8fr;
@@ -1123,7 +1051,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .sum-list-head .sh-winner{text-align:center}
 .sum-row .col-winner{text-align:center;display:flex;justify-content:center}
 
-/* Item rows — table-like */
+/* Item rows - table-like */
 .sum-list{
   display:flex;flex-direction:column;
 }
@@ -1141,7 +1069,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 }
 .sum-row:last-child{border-bottom:none}
 .sum-row:hover{background:var(--surface)}
-/* Winner tinted bg — subtle */
+/* Winner tinted bg - subtle */
 .sum-row.r-amadon{background:color-mix(in srgb, var(--accent) 3%, var(--card-bg))}
 .sum-row.r-amadon:hover{background:color-mix(in srgb, var(--accent) 6%, var(--card-bg))}
 .sum-row.r-market{background:color-mix(in srgb, var(--rec-mk-bg) 4%, var(--card-bg))}
@@ -1157,7 +1085,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   font-size:.72rem;
 }
 .sum-row .col-name .nm-dot{
-  width:8px;height:8px;border-radius:2px;flex-shrink:0;
+  width:8px;height:8px;border-radius:4px;flex-shrink:0;
   background:var(--card-accent,var(--accent-soft));
   opacity:.85;
 }
@@ -1180,11 +1108,11 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
 .sum-row.r-tie .col-diff{color:var(--muted);font-weight:500}
 .sum-row.r-fall .col-diff{color:var(--muted);font-style:italic;font-family:var(--sans);font-size:.62rem}
 
-/* Winner badge — small pill */
+/* Winner badge - small pill */
 .sum-badge{
   display:inline-flex;align-items:center;justify-content:center;
   padding:.12rem .35rem;
-  border-radius:3px;
+  border-radius:4px;
   font-family:var(--sans);
   font-size:.54rem;font-weight:600;
   text-transform:uppercase;letter-spacing:.06em;
@@ -1205,7 +1133,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   color:var(--muted);
 }
 
-/* Mobile: collapse columns — hide qty + bep, keep name/am/mk/diff/winner (5 cols) */
+/* Mobile: collapse columns - hide qty + bep, keep name/am/mk/diff/winner (5 cols) */
 @media(max-width:600px){
   /* 5 columns: Item (flex) / Amadon / Market / Diff / Winner */
   .sum-list-head,.sum-row{
@@ -1314,7 +1242,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   background:transparent;border:none;cursor:pointer;
   color:var(--muted);
   display:inline-flex;align-items:center;justify-content:center;
-  padding:.2rem;border-radius:5px;
+  padding:.2rem;border-radius:8px;
   transition:color .15s,background .15s;
 }
 .tut-close svg{width:14px;height:14px;stroke:currentColor}
@@ -1342,7 +1270,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
   background:var(--acc-bg);
   border:1px solid var(--border);
   padding:.05rem .34rem;
-  border-radius:5px;
+  border-radius:8px;
   font-family:'JetBrains Mono',monospace;
   font-size:.62rem;
   color:var(--accent);
@@ -1492,7 +1420,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
     </footer>
   </section>
 
-  <!-- Executive Summary — compact list of ALL items (one row per item),
+  <!-- Executive Summary - compact list of ALL items (one row per item),
        hidden by default, toggled by Summary button.
        Purpose: scan all items at once without opening accordion cards. -->
   <section class="summary" id="summary" aria-label="Executive summary" hidden>
@@ -1548,7 +1476,7 @@ input.invalid{border-color:var(--invalid-bd)!important;background:var(--invalid-
         </div>
       </div>
 
-      <!-- List body — sticky header + scrollable rows -->
+      <!-- List body - sticky header + scrollable rows -->
       <div class="sum-list-wrap">
         <div class="sum-list-head">
           <span class="sh-name">Item</span>
@@ -2035,7 +1963,7 @@ function loadItemsFromURL(){
   }
 }
 
-// Recommendation icons — stroke="currentColor" inherits from .rec for theme adaptation
+// Recommendation icons - stroke="currentColor" inherits from .rec for theme adaptation
 const ICON_MARKET='<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l1-5h16l1 5"/><path d="M4 9v11a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V9"/><path d="M9 21v-6h6v6"/><line x1="3" y1="9" x2="21" y2="9"/></svg>';
 const ICON_AMADON='<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
 const ICON_FALL='<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".55"><line x1="12" y1="3" x2="12" y2="21"/><line x1="7" y1="6" x2="17" y2="6"/><path d="M7 6l-3 7a3 3 0 0 0 6 0L7 6z"/><path d="M17 6l-3 7a3 3 0 0 0 6 0l-3-7z"/></svg>';
@@ -2159,7 +2087,7 @@ function calcOne(id){
 function calcAll(){
   CL.forEach(c=>calcOne(c.id));
   syncURL();
-  // Real-time summary update — only if summary is open (perf: skip DOM work when hidden)
+  // Real-time summary update - only if summary is open (perf: skip DOM work when hidden)
   if(summaryOpen) updateSummary();
 }
 
@@ -2170,7 +2098,7 @@ const SUMMARY_KEY = 'amadon-summary-open';
 let summaryOpen = false;
 
 // lastCalc[id] = { amNet, mkNet, bep, ai, cost, state, diff }
-// Populated by calcOne() — single source of truth for current calc results.
+// Populated by calcOne() - single source of truth for current calc results.
 // Summary reads from this (NOT from DOM textContent) to avoid race with count-up animation.
 const lastCalc = {};
 
@@ -2178,7 +2106,7 @@ function initSummaryState(){
   try{ summaryOpen = lsGet(SUMMARY_KEY) === '1'; }catch(_){ summaryOpen = false; }
 }
 
-// Summary filter + sort state (not persisted — resets to defaults each session)
+// Summary filter + sort state (not persisted - resets to defaults each session)
 let sumFilter = 'all';        // 'all' | 'amadon' | 'market' | 'incomplete'
 let sumSort = 'default';      // 'default' | 'diff' | 'bep' | 'name'
 let sumSortDir = 'desc';      // 'asc' | 'desc' (toggles on repeated click of same sort)
@@ -2228,7 +2156,7 @@ function buildSummaryRows(){
     const winnerTotal = winnerNet !== null ? winnerNet * (hasStock ? qty : 1) : 0;
     // BEP distance from current Ai (only meaningful if both are valid)
     const bepDist = (bep !== null && bep > 0 && ai !== null) ? Math.abs(ai - bep) / bep : null;
-    // Color dot — use item's color override or default to muted
+    // Color dot - use item's color override or default to muted
     const dotColor = c.color === COMMON ? null : (c.color || null);
     return {
       id: c.id,
@@ -2283,7 +2211,7 @@ function renderSummaryRow(r){
   else if(r.state === 'market') badge = '<span class="sum-badge b-mk">Mk</span>';
   else if(r.state === 'tie')    badge = '<span class="sum-badge b-tie">Tie</span>';
   else                          badge = '<span class="sum-badge b-fall">–</span>';
-  // Color dot — empty if no custom color (use accent-soft default via CSS)
+  // Color dot - empty if no custom color (use accent-soft default via CSS)
   const dotStyle = r.dotColor ? `style="background:${r.dotColor}"` : '';
   const qtyText = r.hasStock ? r.qty : '–';
   return `<div class="sum-row r-${r.state}">
@@ -2628,7 +2556,7 @@ function undoDelete(){
   toast('Restored: ' + item.label);
 }
 
-// Shared undo toast builder — used by delete + reset undo
+// Shared undo toast builder - used by delete + reset undo
 function showUndoToastWithOptions(message, undoFn, extraTimers){
   const el = document.getElementById('toast');
   el.innerHTML = '';
@@ -2722,44 +2650,25 @@ function setIcon(id, iconKey){
   syncURL();
 }
 
-// Dropdown menu helpers — generic for both icon and swatch pickers.
-// `attr` is the data attribute used to identify the dropdown (e.g. 'icon-dd' → data-icon-dd).
+// Dropdown menu helpers - generic for both icon and swatch pickers.
+// `attr` is the data attribute used to identify the dropdown (e.g. 'data-icon-dd').
 function toggleDropdownMenu(attr, id){
-  // Close all other open menus of the same type
   document.querySelectorAll(`[${attr}].open`).forEach(dd => {
     if(dd.dataset[toCamel(attr)] !== id) dd.classList.remove('open');
   });
   const dd = document.querySelector(`[${attr}="${id}"]`);
   if(dd) dd.classList.toggle('open');
-  updateCardStacking();
 }
 function closeAllDropdownMenus(attr){
   document.querySelectorAll(`[${attr}].open`).forEach(dd => dd.classList.remove('open'));
-  updateCardStacking();
 }
-// Convert kebab-case attr name to camelCase dataset key: 'icon-dd' → 'iconDd'
-function toCamel(s){ return s.replace(/-([a-z])/g, (_, c) => c.toUpperCase()); }
+// 'data-icon-dd' → 'iconDd' (for dataset access)
+function toCamel(s){ return s.replace(/-([a-z])/g, (_, c) => c.toUpperCase()).replace(/^data-/, ''); }
 
 function toggleIconMenu(id){ toggleDropdownMenu('data-icon-dd', id); }
 function closeAllIconMenus(){ closeAllDropdownMenus('data-icon-dd'); }
 function toggleSwatchMenu(id){ toggleDropdownMenu('data-swatch-dd', id); }
 function closeAllSwatchMenus(){ closeAllDropdownMenus('data-swatch-dd'); }
-
-// Lift card with open menu/tooltip above siblings — JS fallback for :has() CSS rule
-// (covers browsers that don't support :has() or have inconsistent z-index:auto painting)
-function updateCardStacking(){
-  document.querySelectorAll('.ccard').forEach(card => {
-    const hasOpenMenu = card.querySelector('.swatch-dd.open, .icon-dd.open, .lang-dd.open');
-    const hasActiveTip = card.querySelector('.tip-wrap.show-tip');
-    if(hasOpenMenu || hasActiveTip){
-      card.style.zIndex = '100';
-      card.classList.add('is-menu-open');
-    } else {
-      card.style.zIndex = '';
-      card.classList.remove('is-menu-open');
-    }
-  });
-}
 
 // ── Static text ──────────────────────────────
 function updateStatic(){
@@ -3134,7 +3043,7 @@ function showUndoToast(){
 
 // ── Theme ────────────────────────────────────
 const THEME_KEY = KEYS.theme;
-// Safe localStorage wrapper — returns null on failure (e.g., private browsing, quota exceeded)
+// Safe localStorage wrapper - returns null on failure (e.g., private browsing, quota exceeded)
 function lsGet(key){ try{ return localStorage.getItem(key); }catch(_){ console.debug('[lsGet] unavailable:', key); return null; } }
 function lsSet(key, val){ try{ localStorage.setItem(key, val); return true; }catch(_){ console.debug('[lsSet] unavailable:', key); return false; } }
 function lsRemove(key){ try{ localStorage.removeItem(key); }catch(_){ console.debug('[lsRemove] unavailable:', key); } }
@@ -3239,7 +3148,7 @@ function bindEvents(){
   document.getElementById('gAi').addEventListener('input', calcAll);
 
   // Spotlight border effect on cluster cards (cursor-following glow)
-  // Single delegated listener — efficient, no per-card binding needed
+  // Single delegated listener - efficient, no per-card binding needed
   document.getElementById('grid').addEventListener('mousemove', (e) => {
     const card = e.target.closest('.ccard');
     if(!card) return;
@@ -3290,23 +3199,9 @@ function bindEvents(){
         toggleSwatchMenu(target.dataset.id);
         break;
       case 'set-color':
-        // Color picker UX: keep menu open so user can preview / try other colors.
+        // Keep menu open so user can preview multiple colors.
         // Menu closes via outside-click handler when user clicks elsewhere.
-        // (Previously: closeAllSwatchMenus() here closed the menu synchronously,
-        //  making the click feel "lost" because the .sel indicator never visibly moved.)
         setColor(target.dataset.id, target.dataset.color);
-        // Brief scale pulse — transform-only (GPU-cheap, no layout/paint cost).
-        // box-shadow was used before but it forced paint on every frame → laggy on rapid clicks.
-        // will-change is set transiently so the browser composites the element on its own layer.
-        target.style.willChange = 'transform';
-        target.animate(
-          [
-            { transform: 'scale(1)' },
-            { transform: 'scale(1.18)' },
-            { transform: 'scale(1)' }
-          ],
-          { duration: 240, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
-        ).onfinish = () => { target.style.willChange = 'auto'; };
         break;
       case 'toggle-icon':
         e.stopPropagation();
@@ -3314,17 +3209,7 @@ function bindEvents(){
         toggleIconMenu(target.dataset.id);
         break;
       case 'set-icon':
-        // Same UX rationale as set-color: keep menu open for preview.
         setIcon(target.dataset.id, target.dataset.icon);
-        target.style.willChange = 'transform';
-        target.animate(
-          [
-            { transform: 'scale(1)' },
-            { transform: 'scale(1.18)' },
-            { transform: 'scale(1)' }
-          ],
-          { duration: 240, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }
-        ).onfinish = () => { target.style.willChange = 'auto'; };
         break;
       case 'toggle-summary':
         toggleSummary();
@@ -3359,36 +3244,19 @@ function bindEvents(){
     // Only handle tap on touch devices (where hover doesn't work)
     if(!window.matchMedia('(hover: none)').matches) return;
     e.stopPropagation();
-    // Close other open tooltips
     document.querySelectorAll('.tip-wrap.show-tip').forEach(t => {
       if(t !== tipWrap) t.classList.remove('show-tip');
     });
     tipWrap.classList.toggle('show-tip');
     if(tipWrap.classList.contains('show-tip')) positionTooltip(tipWrap);
-    updateCardStacking();  // lift card so tooltip isn't overlapped by siblings
   });
 
   // Desktop hover: position tooltip before it becomes visible
   document.addEventListener('pointerenter', e => {
     const tipWrap = e.target.closest && e.target.closest('.tip-wrap');
     if(!tipWrap) return;
-    if(window.matchMedia('(hover: none)').matches) return;  // skip on touch
-    positionTooltip(tipWrap);
-  }, true);
-  // Desktop hover-leave: clear stacking lift (only relevant if user hovered tip then moved away)
-  document.addEventListener('pointerleave', e => {
-    const tipWrap = e.target.closest && e.target.closest('.tip-wrap');
-    if(!tipWrap) return;
     if(window.matchMedia('(hover: none)').matches) return;
-    // Small delay so rapid hover between tip-wraps doesn't flicker
-    setTimeout(() => {
-      // Only clear if no tip is show-tip AND no menu open in this card
-      const card = tipWrap.closest('.ccard');
-      if(card && !card.querySelector('.tip-wrap.show-tip') && !card.querySelector('.swatch-dd.open, .icon-dd.open')){
-        card.style.zIndex = '';
-        card.classList.remove('is-menu-open');
-      }
-    }, 50);
+    positionTooltip(tipWrap);
   }, true);
 
   // Reposition on resize/scroll (close all tooltips to avoid stale positions)
@@ -3397,20 +3265,16 @@ function bindEvents(){
     clearTimeout(repositionTimer);
     repositionTimer = setTimeout(() => {
       document.querySelectorAll('.tip-wrap.show-tip').forEach(t => t.classList.remove('show-tip'));
-      updateCardStacking();
     }, 100);
   });
   window.addEventListener('scroll', () => {
     document.querySelectorAll('.tip-wrap.show-tip').forEach(t => t.classList.remove('show-tip'));
-    updateCardStacking();
   }, true);
 
   // Close tooltips on outside click
   document.addEventListener('click', e => {
     if(!e.target.closest('.tip-wrap')){
-      const hadShowTip = document.querySelector('.tip-wrap.show-tip');
       document.querySelectorAll('.tip-wrap.show-tip').forEach(t => t.classList.remove('show-tip'));
-      if(hadShowTip) updateCardStacking();
     }
   });
 
