@@ -2167,7 +2167,7 @@ function calcOne(id){
   animateNumber(document.getElementById(`nMk_${id}`), mkNet!==null?fmt(mkNet):'-');
   animateNumber(document.getElementById(`bv_${id}` ), bep !==null?fmt(bep) :'-');
 
-  lastCalc[id] = { amNet, mkNet, bep, ai, cost };
+  const prev = lastCalc[id];
   let state, ico, act, rsn, type;
   if(amNet===null||mkNet===null){
     state='fall'; type='r-fall'; ico=ICON_FALL; act=s('cpIncomplete'); rsn='';
@@ -2181,32 +2181,42 @@ function calcOne(id){
       state='tie'; type='r-tie'; act=s('aTie'); rsn=s('rTie'); ico=ICON_FALL;
     }
   }
-  lastCalc[id].state = state;
-  lastCalc[id].diff = (amNet!==null && mkNet!==null) ? Math.abs(mkNet-amNet) : null;
+  const diff = (amNet!==null && mkNet!==null) ? Math.abs(mkNet-amNet) : null;
+  lastCalc[id] = { amNet, mkNet, bep, ai, cost, state, diff };
 
-  const amCardEl = document.getElementById(`nAm_${id}`).closest('.rcard');
-  const mkCardEl = document.getElementById(`nMk_${id}`).closest('.rcard');
-  if(amCardEl) amCardEl.classList.remove('is-winner');
-  if(mkCardEl) mkCardEl.classList.remove('is-winner');
-  if(amNet!==null && mkNet!==null){
-    if(mkNet > amNet && mkCardEl) mkCardEl.classList.add('is-winner');
-    else if(amNet > mkNet && amCardEl) amCardEl.classList.add('is-winner');
+  const stateChanged = !prev || prev.state !== state;
+  const diffChanged = !prev || prev.diff !== diff;
+
+  if(stateChanged || !prev ||
+     (prev.amNet===null) !== (amNet===null) ||
+     (prev.mkNet===null) !== (mkNet===null)){
+    const amCardEl = document.getElementById(`nAm_${id}`).closest('.rcard');
+    const mkCardEl = document.getElementById(`nMk_${id}`).closest('.rcard');
+    if(amCardEl) amCardEl.classList.remove('is-winner');
+    if(mkCardEl) mkCardEl.classList.remove('is-winner');
+    if(amNet!==null && mkNet!==null){
+      if(mkNet > amNet && mkCardEl) mkCardEl.classList.add('is-winner');
+      else if(amNet > mkNet && amCardEl) amCardEl.classList.add('is-winner');
+    }
   }
 
   if(stockEl){
-    if(amNet!==null&&mkNet!==null&&stock!==null){
-      stockEl.parentElement.querySelector(`#sum_${id}`).textContent=s('stk',fmt(amNet*stock),fmt(mkNet*stock));
-    } else {
-      stockEl.parentElement.querySelector(`#sum_${id}`).textContent='';
-    }
+    const newStkText = (amNet!==null&&mkNet!==null&&stock!==null)
+      ? s('stk',fmt(amNet*stock),fmt(mkNet*stock))
+      : '';
+    const stkEl = stockEl.parentElement.querySelector(`#sum_${id}`);
+    if(stkEl && stkEl.textContent !== newStkText) stkEl.textContent = newStkText;
   }
-  const recEl=document.getElementById(`rec_${id}`);
-  recEl.classList.remove('r-market','r-amadon','r-tie','r-fall');
-  recEl.classList.add(type);
-  recEl.dataset.rec=state;
-  document.getElementById(`rIco_${id}`).innerHTML=ico;
-  document.getElementById(`rAct_${id}`).textContent=act;
-  document.getElementById(`rRsn_${id}`).textContent=rsn;
+
+  if(stateChanged || diffChanged){
+    const recEl=document.getElementById(`rec_${id}`);
+    recEl.classList.remove('r-market','r-amadon','r-tie','r-fall');
+    recEl.classList.add(type);
+    recEl.dataset.rec=state;
+    document.getElementById(`rIco_${id}`).innerHTML=ico;
+    document.getElementById(`rAct_${id}`).textContent=act;
+    document.getElementById(`rRsn_${id}`).textContent=rsn;
+  }
 }
 
 function calcAll(){
@@ -2346,6 +2356,10 @@ function updateSummary(){
   const winMk = allRows.filter(r => r.state === 'market').length;
   const incomplete = allRows.filter(r => r.state === 'fall').length;
   const bestTotal = allRows.reduce((s, r) => s + r.winnerTotal, 0);
+  const rowsSig = rows.map(r => `${r.id}:${r.state}:${r.amNet}:${r.mkNet}:${r.bep}:${r.diff}:${r.qty}`).join('|');
+  const sig = `${winAm}:${winMk}:${incomplete}:${bestTotal}|${rowsSig}|${sumFilter}|${sumSort}|${sumSortDir}|${lang}`;
+  if(lastSummarySig === sig) return;
+  lastSummarySig = sig;
   const stats = document.getElementById('sumStats');
   if(stats){
     stats.innerHTML = `
@@ -2366,6 +2380,7 @@ function updateSummary(){
     list.innerHTML = rows.map(renderSummaryRow).join('');
   }
 }
+let lastSummarySig = null;
 function handleSumFilter(filter){
   sumFilter = filter;
   lsSet('amadon-sum-filter', filter);
@@ -2720,7 +2735,9 @@ function setCost(id, val){
   const c = CL_MAP.get(id);
   if(!c) return;
   c.cost = parseInt(val, 10) || 0;
-  calcAll();
+  calcOne(id);
+  scheduleSyncURL();
+  if(summaryOpen) updateSummary();
 }
 
 function setColor(id, hex){
@@ -3206,12 +3223,14 @@ function applyThemeWithReveal(t, e){
     applyTheme(t);
     return;
   }
-  const x = e && typeof e.clientX === 'number' ? e.clientX : window.innerWidth - 50;
-  const y = e && typeof e.clientY === 'number' ? e.clientY : 50;
-  const endRadius = Math.hypot(
-    Math.max(x, window.innerWidth - x),
-    Math.max(y, window.innerHeight - y)
-  );
+  const vv = window.visualViewport;
+  const vw = vv ? vv.width : window.innerWidth;
+  const vh = vv ? vv.height : window.innerHeight;
+  const ox = vv ? vv.offsetLeft : 0;
+  const oy = vv ? vv.offsetTop : 0;
+  const x = (e && typeof e.clientX === 'number' ? e.clientX : vw - 50) - ox;
+  const y = (e && typeof e.clientY === 'number' ? e.clientY : 50) - oy;
+  const endRadius = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y)) * 1.15;
   const transition = document.startViewTransition(() => applyTheme(t));
   transition.ready.then(() => {
     document.documentElement.animate(
@@ -3266,9 +3285,11 @@ function closeLangMenu(){
 
 function changeLang(code){
   if(!STR[code])return;
+  if(code === lang) return;
   lang=code;
   document.documentElement.lang=code;
   setLangUI(code);
+  lastSummarySig = null;
   renderClusters();
   updateStatic();
   calcAll();
@@ -3482,17 +3503,16 @@ function bindEvents(){
 function initUI(){
   renderLangMenu();
   setLangUI(lang);
-  applyUseCost(useCost);
+  const urlHasCostParam = new URLSearchParams(location.search).has('cost');
+  if(!urlHasCostParam) applyUseCost(useCost);
   renderClusters();
   loadQS();
-
   if(autoSavedData && autoSavedData.gAi && !new URLSearchParams(location.search).has('ai')){
     document.getElementById('gAi').value = autoSavedData.gAi;
   }
   syncCustomIdCounter();
   updateStatic();
   initTutorial();
-
   document.querySelectorAll('[data-action="sum-filter"]').forEach(c => {
     c.classList.toggle('on', c.dataset.filter === sumFilter);
   });
