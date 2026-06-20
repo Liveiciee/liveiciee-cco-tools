@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Amadon P2P Calc: Compare Amadon vs Market prices for game items. Calculate net BTC, break-even point, and get sell recommendations.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#fbfaf6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1813" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Amadon P2P Calc">
+<meta property="og:description" content="Compare Amadon vs Market prices for game items. Calculate net BTC, break-even point, and get sell recommendations.">
+<meta name="twitter:card" content="summary">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+<title>Amadon P2P Calc</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<main class="wrap">
+
+  <header class="hdr">
+    <div class="hdr-l">
+      <div class="logo-badge">
+        <svg aria-hidden="true" class="hdr-logo" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      </div>
+      <div class="hdr-t">
+        <div class="hdr-title" id="hTitle">Amadon P2P Calc</div>
+        <div class="hdr-sub"  id="hSub">Sell to Amadon or players?</div>
+      </div>
+    </div>
+    <div class="hdr-r">
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme">
+        <svg aria-hidden="true" class="ic-sun" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+        </svg>
+        <svg aria-hidden="true" class="ic-moon" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+        </svg>
+      </button>
+      <div class="lang-dd" id="langDd">
+        <button class="lang-btn" id="langBtn" type="button" aria-haspopup="listbox" aria-expanded="false" aria-label="Choose language">
+          <span class="lang-flag" id="langFlag">🇬🇧</span>
+          <span class="lang-code" id="langCode">EN</span>
+          <svg aria-hidden="true" class="lang-caret" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
+        </button>
+        <div class="lang-menu" id="langMenu" role="listbox"></div>
+      </div>
+    </div>
+  </header>
+
+  <section class="body">
+
+    <div class="tut-banner" id="tutBanner">
+      <div class="tut-head" id="tutHead" data-action="toggle-tut">
+        <span class="tut-title" id="tutTitle">How to Use</span>
+        <button class="tut-close" id="tutClose" data-action="close-tut" type="button" aria-label="Close">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="tut-body">
+        <div class="tut-body-inner">
+          <p id="tutP1">1. Enter Ai Price (BTC): current Ai price in Amadon.</p>
+          <p id="tutP2">2. Each item has 3 inputs:</p>
+          <p>• <span id="tutAmadon">Amadon Price: sell price to Amadon. Check the Amadon menu in-game.</span></p>
+          <p>• <span id="tutRate">P2P Rate: Item-to-Ai ratio (e.g. 1 TSC = 105 Ai). Ask other players / check market chat.</span></p>
+          <p>• <span id="tutQty">Qty: how many items you have / want to sell.</span></p>
+          <p id="tutP3">3. Result: Net BTC = (Amadon or Rate×Ai) - Crafting Cost. Green = Amadon wins, blue = Market wins.</p>
+          <p id="tutP4">4. BEP Ai = the Ai price at which Market beats Amadon. If current Ai < BEP → sell to Amadon.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="top-bar">
+      <div class="ai-grp">
+        <label for="gAi" id="lAi">Ai Price (BTC)</label>
+        <span class="tip-wrap" data-tip="ai" tabindex="0">
+          <span class="tip-icon" aria-hidden="true">?</span>
+          <span class="tip-bubble" id="tipAi" role="tooltip">Current Ai price in Amadon (BTC).</span>
+        </span>
+        <input type="number" id="gAi" value="9000" min="0.01" step="0.01">
+      </div>
+      <div class="craft-grp">
+        <label class="craft-label" id="lCraft" for="craftToggle">Crafting Cost</label>
+        <button class="craft-toggle" id="craftToggle" type="button" role="switch" aria-checked="false" aria-label="Crafting Cost">
+          <span class="knob"></span>
+        </button>
+      </div>
+      <div class="btn-grp">
+        <button class="btn btn-help" id="btnHelp" data-action="show-tut" aria-label="How to Use" title="How to Use">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </button>
+        <button class="btn btn-edit" id="btnEdit" data-action="toggle-edit" aria-label="Edit">
+          <svg aria-hidden="true" class="ic-edit" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          <svg aria-hidden="true" class="ic-done" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+          <span id="btnEditText">Edit</span>
+        </button>
+        <button class="btn" data-action="copy-rec" aria-label="Copy All">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="9" y="9" width="13" height="13" rx="2"/>
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+          </svg>
+          <span id="btnCopy">Copy Rec</span>
+        </button>
+        <button class="btn btn-summary" id="btnSummary" data-action="toggle-summary" aria-label="Summary" aria-pressed="false">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="9" y1="21" x2="9" y2="9"/>
+          </svg>
+          <span id="btnSummaryText">Summary</span>
+        </button>
+        <button class="btn" data-action="do-reset" aria-label="Reset">
+          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"/>
+            <path d="M3.51 15a9 9 0 102.13-9.36L1 10"/>
+          </svg>
+          <span id="btnReset">Reset</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="grid" id="grid" role="region" aria-label="Item clusters"></div>
+
+    <footer class="share-bar">
+      <input class="share-input" id="shareUrl" readonly data-action="select-self" placeholder="Share URL…" aria-label="Share URL">
+      <button class="btn" data-action="copy-url" aria-label="Share">
+        <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/>
+          <polyline points="16 6 12 2 8 6"/>
+          <line x1="12" y1="2" x2="12" y2="15"/>
+        </svg>
+        <span id="btnShare">Share</span>
+      </button>
+    </footer>
+  </section>
+
+  <section class="summary" id="summary" aria-label="Executive summary" hidden>
+    <div class="summary-inner">
+      <header class="summary-head">
+        <div class="summary-head-l">
+          <span class="summary-eyebrow" id="sumOverview">Overview</span>
+          <h2 class="summary-title" id="sumTitle">Summary</h2>
+        </div>
+        <div class="summary-head-r">
+          <div class="sum-stats" id="sumStats">
+
+          </div>
+          <button class="summary-close" id="summaryClose" data-action="toggle-summary" aria-label="Close summary">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="sum-toolbar">
+        <div class="sum-filter">
+          <span class="fl-lbl" id="sumShowLbl">Show</span>
+          <button class="sum-chip on" data-action="sum-filter" data-filter="all"><span id="sumFltAll">All</span></button>
+          <button class="sum-chip" data-action="sum-filter" data-filter="amadon"><span id="sumFltAm">Amadon</span></button>
+          <button class="sum-chip" data-action="sum-filter" data-filter="market"><span id="sumFltMk">Market</span></button>
+          <button class="sum-chip" data-action="sum-filter" data-filter="incomplete"><span id="sumFltInc">Incomplete</span></button>
+        </div>
+        <span class="sum-spacer"></span>
+        <div class="sum-sort">
+          <span class="so-lbl" id="sumSortLbl">Sort</span>
+          <button class="sum-chip on" data-action="sum-sort" data-sort="default"><span id="sumSrtOrder">Order</span>
+          </button>
+          <button class="sum-chip" data-action="sum-sort" data-sort="diff"><span id="sumSrtDiff">Diff</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg>
+          </button>
+          <button class="sum-chip" data-action="sum-sort" data-sort="bep"><span id="sumSrtBep">BEP dist</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg>
+          </button>
+          <button class="sum-chip" data-action="sum-sort" data-sort="name"><span id="sumSrtName">Name</span>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 15 12 9 18 15"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="sum-list-wrap" aria-label="Item summary">
+        <div class="sum-list-head">
+          <span class="sh-name" id="shItem">Item</span>
+          <span class="sh-qty" id="shQty">Qty</span>
+          <span class="sh-am sh-num" id="shAm">Amadon</span>
+          <span class="sh-mk sh-num" id="shMk">Market</span>
+          <span class="sh-bep sh-num" id="shBep">BEP Ai</span>
+          <span class="sh-diff sh-num" id="shDiff">Diff</span>
+          <span class="sh-winner" id="shWinner">Winner</span>
+        </div>
+        <div class="sum-list" id="sumList">
+
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="script.js"></script>
+<noscript><p style="text-align:center;padding:2rem;font-family:sans-serif">This calculator requires JavaScript to function. Please enable JavaScript in your browser.</p></noscript>
+</body>
+</html>
