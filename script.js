@@ -1759,7 +1759,10 @@ function applyTheme(t){
   document.documentElement.setAttribute('data-theme', t);
   lsSet(THEME_KEY, t);
   const btn = document.getElementById('themeToggle');
-  if(btn) btn.setAttribute('aria-label', t==='dark' ? s('themeLight') : s('themeDark'));
+  if(btn){
+    btn.setAttribute('aria-label', t==='dark' ? s('themeLight') : s('themeDark'));
+    btn.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+  }
   const target = t === 'dark' ? '#1a1813' : '#fbfaf6';
   document.querySelectorAll('meta[name="theme-color"]').forEach(tc => {
     tc.setAttribute('content', target);
@@ -1895,7 +1898,7 @@ function bindEvents(){
     if(!e.target.closest('#langDd')) closeLangMenu();
   });
   document.addEventListener('keydown', e => {
-    if(e.key === 'Escape'){ closeLangMenu(); closeAllSwatchMenus(); }
+    if(e.key === 'Escape'){ closeLangMenu(); closeAllSwatchMenus(); closeAllIconMenus(); }
   });
 
   document.addEventListener('keydown', e => {
