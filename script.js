@@ -545,13 +545,25 @@ function autoSave(){
   clearTimeout(autoSaveTimer);
   autoSaveTimer = setTimeout(() => {
     try{
+      const inputs = {};
+      CL.forEach(c => {
+        const a = document.getElementById(`a_${c.id}`);
+        const r = document.getElementById(`r_${c.id}`);
+        const s = document.getElementById(`s_${c.id}`);
+        inputs[c.id] = {
+          a: a ? a.value : '',
+          r: r ? r.value : '',
+          s: s ? s.value : ''
+        };
+      });
       const data = {
         CL: CL.map(c => ({ ...c })),
         cardOpen: { ...cardOpen },
         gAi: document.getElementById('gAi').value,
         useCost,
         lang,
-        editMode
+        editMode,
+        inputs
       };
       lsSet(AUTOSAVE_KEY, JSON.stringify(data));
     }catch(e){ console.debug('[autoSave] failed:', e.message); }
@@ -1748,9 +1760,10 @@ function applyTheme(t){
   lsSet(THEME_KEY, t);
   const btn = document.getElementById('themeToggle');
   if(btn) btn.setAttribute('aria-label', t==='dark' ? s('themeLight') : s('themeDark'));
-  const tc = document.querySelector('meta[name="theme-color"]:not([media])') ||
-             document.querySelector('meta[name="theme-color"]');
-  if(tc) tc.setAttribute('content', t === 'dark' ? '#1a1813' : '#fbfaf6');
+  const target = t === 'dark' ? '#1a1813' : '#fbfaf6';
+  document.querySelectorAll('meta[name="theme-color"]').forEach(tc => {
+    tc.setAttribute('content', target);
+  });
 }
 
 function applyThemeWithReveal(t, e){
@@ -2046,6 +2059,19 @@ function initUI(){
   loadQS();
   if(autoSavedData && autoSavedData.gAi && !new URLSearchParams(location.search).has('ai')){
     document.getElementById('gAi').value = autoSavedData.gAi;
+  }
+  if(autoSavedData && autoSavedData.inputs){
+    const urlParams = new URLSearchParams(location.search);
+    CL.forEach(c => {
+      const saved = autoSavedData.inputs[c.id];
+      if(!saved) return;
+      const a = document.getElementById(`a_${c.id}`);
+      const r = document.getElementById(`r_${c.id}`);
+      const s = document.getElementById(`s_${c.id}`);
+      if(a && saved.a !== undefined && !urlParams.has(`${c.id}a`)) a.value = saved.a;
+      if(r && saved.r !== undefined && !urlParams.has(`${c.id}r`)) r.value = saved.r;
+      if(s && saved.s !== undefined && !urlParams.has(`${c.id}s`)) s.value = saved.s;
+    });
   }
   syncCustomIdCounter();
   updateStatic();
