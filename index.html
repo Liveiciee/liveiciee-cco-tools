@@ -11,9 +11,28 @@
 <meta property="og:title" content="Amadon P2P Calc">
 <meta property="og:description" content="Compare Amadon vs Market prices for game items. Calculate net BTC, break-even point, and get sell recommendations.">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Amadon P2P Calc">
+<meta name="twitter:description" content="Compare Amadon vs Market prices for game items. Calculate net BTC, break-even point, and get sell recommendations.">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; img-src 'self' data:;">
 <title>Amadon P2P Calc</title>
 <link rel="stylesheet" href="style.css">
+<script>
+
+(function(){
+  try{
+    var saved = localStorage.getItem('amadon-theme');
+    var theme = (saved === 'light' || saved === 'dark')
+      ? saved
+      : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.setAttribute('data-theme', theme);
+    var target = theme === 'dark' ? '#1a1813' : '#fbfaf6';
+    var metas = document.querySelectorAll('meta[name="theme-color"]');
+    for(var i = 0; i < metas.length; i++) metas[i].setAttribute('content', target);
+  }catch(_){
+  
+  }
+})();
+</script>
 </head>
 <body>
 <main class="wrap">
@@ -29,7 +48,7 @@
       </div>
     </div>
     <div class="hdr-r">
-      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme">
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle theme" aria-pressed="false">
         <svg aria-hidden="true" class="ic-sun" viewBox="0 0 24 24" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="4"/>
           <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
@@ -210,7 +229,7 @@
 </main>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<noscript><p style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;font-family:sans-serif;background:#fbfaf6;color:#1a1815">This calculator requires JavaScript to function. Please enable JavaScript in your browser.</p></noscript>
 <script src="script.js"></script>
-<noscript><p style="text-align:center;padding:2rem;font-family:sans-serif">This calculator requires JavaScript to function. Please enable JavaScript in your browser.</p></noscript>
 </body>
 </html>
